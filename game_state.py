@@ -3,41 +3,50 @@ class GameState(object):
 
     def __init__(self, size=3):
         self.size = size
+        
 
-    def findLines(self, sequence, tac):
-        lines = {}
+    def getCoordinates(self, point):
+        x , y = point%self.size, point//self.size
+        return x,y
+    
+    def findLines(self, sequence):
+        
+        lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
         size = self.size
+        
+        for point in sequence:
+            first_point = 0
+            tic = 1
+            tac = point[1]
+            x , y = self.getCoordinates(point[0])
 
-        for i, point1 in enumerate(sequence):
-            for point2 in sequence[i+1:]:
+            # Tally of horizontal and vertical lines
+            for direction in ['Horizontal', 'Vertical']:
+                coordinate = {'Vertical': x, 'Horizontal': y}[direction]
 
-                x1, x2 = point1[0] % size, point2[0] % size
-                y1, y2 = point1[0] // size, point2[0] // size
+                if not lines[direction].get(coordinate, False):
+                    lines[direction][coordinate] = [point]
+                    
+                elif lines[direction][coordinate][first_point][tic] == tac and lines[direction][coordinate] is not None:
+                    lines[direction][coordinate].append(point)
+                    
+                else:
+                    lines[direction][coordinate] = None
+                    
+            # Tally of the two possible diagonal lines
+            if x == y or x + y == size - 1:
+                direction = x==y
+                if not lines['Diagonal'].get(direction, False):
+                    lines['Diagonal'][direction] = [point]
+                    
+                elif lines['Diagonal'][direction][first_point][tic] == tac and lines['Diagonal'][direction] is not None:
+                    lines['Diagonal'][direction].append(point)
+                else:
+                    lines['Diagonal'][direction] = None
+            
+        return lines   
 
-                key = None
-                if x1 == x2 and y1 == y2: #This case should not occur unless a bug
-                    print "Error: A position has been played twice in the sequence"
-                    print point1, point2
-                    continue
-                if x1 == x2:
-                    key = ('c', x1)
-                if y1 == y2:
-                    key = ('r', y1)
-                if x1 == y1 and x2 == y2:
-                    key = ('d', 1)
-                if x1+y1 == size-1 and x2+y2==size-1:
-                    key = ('d', -1)
-
-                if point1[1] == tac and point2[1] == tac:
-                    if key and key not in lines:
-                        lines[key] = [point1]
-                    elif key and lines[key] != None:
-                        lines[key].append(point2)
-                elif key:
-                    lines[key] = None
-
-        return lines
-
+    
     
     ################ Tests ####################
 
@@ -76,14 +85,14 @@ class GameState(object):
                 print row
 
             print
-            print "X's"
-            lns = self.findLines(test, 'X')
-            for l in lns: 
-                print l, lns[l]
-            print
-            print "O's"
-            lns = self.findLines(test, 'O')
-            for l in lns: 
-                print l, lns[l]
-            print '----- end ', t
-            print
+            lns = self.findLines(test)
+            for direction in lns:
+                lines = { coord : lns[direction][coord] for coord in lns[direction] if lns[direction][coord] is not None }
+                print direction, [(line, lns[direction][line]) for line in lines if len(lns[direction][line]) > 1]
+            # print
+            # print "O's"
+            # lns = self.findLines(test, 'O')
+            # for l in lns: 
+            #     print l, lns[l]
+            # print '----- end ', t
+            # print
