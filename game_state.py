@@ -2,34 +2,57 @@ import random as ran
 
 class Player(object):
     mark = None
-    def __init__(self, one, game_state):
+    def __init__(self, mark, game_state):
         self.game_state = game_state
+        self.mark = mark
         
-        if one:
-            self.mark = 'X'
-        else:
-            self.mark = 'O'
-            
+    def makeMove(self):
+        pass
+    
 class GameState(object):
+    player1 = None
+    player2 = None
 
     def __init__(self, size=3):
 
         # Initialize state variables
-        self.done = False
-        self.step = 0
+        self.winner = False
+        self.step = 1
         self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
-        self.game_sequence = ()
+        self.game_sequence = []
         
         # Game size
         self.size = size
 
+    def setPlayers(self, player1, player2):
+        self.player1 = player1
+        self.player2 = player2
 
+    def gameFinished(self):
+        size = self.size
+        # Update roster of consecutive inline marks
+        self.findLines(self.game_sequence)
+
+        # Find 'size' number of consecutive marks in a line
+        for direction in ['Vertical', 'Horizontal', 'Diagonal']:
+            for line in (self.lines[direction].get(coordinate) for coordinate in range(size) + range(0, size**2 -size , size) ):
+                if line is not None and len(line) == size:
+                    return True
+            
+        # All positions filled no winner
+        if len(self.game_sequence) >= self.size**2:
+            return True
+        
+        return False
+        
     def getCoordinates(self, point):
         x , y = point%self.size, point//self.size
         return x,y
     
     def findLines(self, sequence):
         size = self.size
+        if sequence == []:
+            return
         
         for point in sequence:
             first_point = 0
@@ -52,17 +75,39 @@ class GameState(object):
                     
             # Tally of the two possible diagonal lines
             if x == y or x + y == size - 1:
-                direction = x==y
-                if not self.lines['Diagonal'].get(direction, False):
-                    self.lines['Diagonal'][direction] = [point]
+                orientation = x==y
+                if not self.lines['Diagonal'].get(orientation, False):
+                    self.lines['Diagonal'][orientation] = [point]
                     
-                elif self.lines['Diagonal'][direction] is not None and self.lines['Diagonal'][direction][first_point][tic] == tac:
-                    self.lines['Diagonal'][direction].append(point) if point not in self.lines['Diagonal'][direction] else None
+                elif self.lines['Diagonal'][orientation] is not None and self.lines['Diagonal'][orientation][first_point][tic] == tac:
+                    self.lines['Diagonal'][orientation].append(point) if point not in self.lines['Diagonal'][orientation] else None
+                    
                 else:
-                    self.lines['Diagonal'][direction] = None
-
+                    self.lines['Diagonal'][orientation] = None
+    
+                    
+    def takeStep(self):
+        if self.step % 2 == 1:
+            self.game_sequence.append(self.player1.makeMove())
+        else:
+            self.game_sequence.append(self.player2.makeMove())
+        for row in self.makeGrid(self.game_sequence):
+            print row
+        print 
+        self.step += 1
                     
     ################ Tests ####################
+
+    def makeGrid(self,sequence):
+        size = self.size
+        grid = [ [' ' for i in range(size)] for j in range(size) ]
+        
+        for p in sequence:
+            x, y = p[0]%size, p[0]//size
+            grid[y][x] = p[1]
+            
+        return grid
+        
 
     # def test_lines(self, global_dic = True):
     #     size = self.size
@@ -102,13 +147,11 @@ class GameState(object):
 
     #                   ]
         
-    #     # Grid
-    #     for t, test in enumerate(tests):
-    #         grid = [ [' ' for i in range(size)] for j in range(size) ]
-    #         for p in test:
-    #             x, y = p[0]%size, p[0]//size
-    #             grid[y][x] = p[1]
 
+    #     for t, test in enumerate(tests):
+            
+    #         # Grid            
+    #         grid = self.makeGrid(test)
 
     #         #####Test#####
     #         print "Test: ", t, test            
