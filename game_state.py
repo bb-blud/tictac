@@ -2,13 +2,28 @@ import random as ran
 
 class Player(object):
     mark = None
+    
     def __init__(self, mark, game_state):
         self.game_state = game_state
         self.mark = mark
         
     def makeMove(self):
         pass
-    
+
+class QMap(object):
+   
+    def __init__(self):
+        self.Q = {}
+        
+    def updateQ(self, move_sequence):
+        if not self.Q.get(move_sequence, False):
+            self.Q[move_sequence] = 1
+        else:
+            self.Q[move_sequence] += 1
+
+    def getQ(self):
+        return self.Q
+            
 class GameState(object):
     player1 = None
     player2 = None
@@ -28,6 +43,18 @@ class GameState(object):
         self.player1 = player1
         self.player2 = player2
 
+    def setQMap(self, Q):
+        self.Q = Q
+        
+    def getQMap(self):
+        return self.Q
+    
+    def resetGame(self):
+        self.winner = False
+        self.step = 1
+        self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
+        self.game_sequence = []
+    
     def gameFinished(self):
         size = self.size
         # Update roster of consecutive inline marks
@@ -88,12 +115,17 @@ class GameState(object):
                     
     def takeStep(self):
         if self.step % 2 == 1:
-            self.game_sequence.append(self.player1.makeMove())
+            move = self.player1.makeMove()
+            self.game_sequence.append(move)
+            self.Q.updateQ( (self.step,)+tuple(move for move in self.game_sequence) )
         else:
-            self.game_sequence.append(self.player2.makeMove())
-        for row in self.makeGrid(self.game_sequence):
-            print row
-        print 
+            move = self.player2.makeMove()
+            self.game_sequence.append(move)
+            self.Q.updateQ( (self.step,)+tuple(move for move in self.game_sequence) )
+            
+        # for row in self.makeGrid(self.game_sequence):
+        #     print row
+        # print 
         self.step += 1
                     
     ################ Tests ####################
