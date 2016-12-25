@@ -44,9 +44,11 @@ def run():
     #     print
 
     ## Tests ##
+    #Find lines
     # s = GameState(5)
     # s.test_lines()
-
+    
+    #Transform to 'standard' position
     gs = GameState()
     gs.testTransform()
     

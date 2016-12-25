@@ -163,39 +163,52 @@ class GameState(object):
         grid = [ [' ' for i in range(size)] for j in range(size) ]
         
         for p in sequence:
-            x, y = p[0]%size, p[0]//size
+            x, y = self.getCoordinates(p[0])
             grid[y][x] = p[1]
             
         return grid
 
     def testTransform(self):
+        
+        tests = [
+            [3, 2, (2, 'O')],  #  
+            [3, 8, (8, 'O')],  # All corners are equivalent
+            [3, 6, (6, 'O')],  #
 
-        # Test 1
-        self.size = 4
-        start = 10
-        self.setTransform(start)
-        point = self.getCoordinates(start)
-        print "point: " , point
-        print "point': "  , self.transform(point)
-        print
-        
-        seq = [(1,'X'),(2,'O'),(3,'X'),(7,'O'),(11,'X')]
-        print seq
-        for row in self.makeGrid(seq):
-            print row
-        print
-        
-        tseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in seq]
-        print tseq
-        for row in self.makeGrid(tseq):
-            print row
-        print
-        
-        ttseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in tseq]
-        print ttseq
-        for row in self.makeGrid(ttseq):
-            print row
-        print
+            [5, 12, (12, 'X')], # Center point doesn't move
+            
+            [4, 10, (10,'1'),(2,'2'),(3,'3'),(7,'4'),(11,'5')]] # Order is preserved
+
+        for i, test in enumerate(tests):
+            self.resetGame()
+            
+            print "Test: ", i
+            self.size = test[0]
+            start = test[1]
+            self.setTransform(start)
+
+            point = self.getCoordinates(start)
+            print "point: {}, Index: {}".format(point, start)
+            print "tpoint: {}, Index: {}".format(self.transform(point), self.getIndex(self.transform(point)) )
+            print
+
+            seq = test[2:]
+            print seq
+            for row in self.makeGrid(seq):
+                print row
+            print
+
+            tseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in seq]
+            print tseq
+            for row in self.makeGrid(tseq):
+                print row
+            print
+
+            ttseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in tseq]
+            print ttseq
+            for row in self.makeGrid(ttseq):
+                print row
+            print 'END Test: ', i
 
     # def test_lines(self, global_dic = True):
     #     size = self.size
