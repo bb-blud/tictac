@@ -23,21 +23,23 @@ class QMap(object):
 
     def getQ(self):
         return self.Q
-            
+
 class GameState(object):
     player1 = None
     player2 = None
 
     def __init__(self, size=3):
+        # Game size
+        self.size = abs(size)
 
         # Initialize state variables
         self.winner = False
         self.step = 1
         self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
         self.game_sequence = []
-        
-        # Game size
-        self.size = size
+
+        # For global coordinate transform
+        self.transform = lambda (x,y): (x,y)
 
     def setPlayers(self, player1, player2):
         self.player1 = player1
@@ -45,15 +47,9 @@ class GameState(object):
 
     def setQMap(self, Q):
         self.Q = Q
-        
+
     def getQMap(self):
         return self.Q
-    
-    def resetGame(self):
-        self.winner = False
-        self.step = 1
-        self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
-        self.game_sequence = []
     
     def gameFinished(self):
         size = self.size
@@ -71,10 +67,42 @@ class GameState(object):
             return True
         
         return False
+    
+    def resetGame(self):
+        self.winner = False
+        self.step = 1
+        self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
+        self.game_sequence = []
+        self.transform = lambda (x,y): (x,y)
+
+
+    def setTransform(self, first_move):
+        def compose(f,g):
+            return lambda x: f(g(x))
         
-    def getCoordinates(self, point):
-        x , y = point%self.size, point//self.size
+        x , y = self.getCoordinates(first_move)
+        size = self.size
+        
+        parity = size+1
+        midline = size/2 - 0.5*(parity%2)
+
+        if x > midline:
+            reflectX = lambda (x,y): (int(midline - (x - midline)), y)
+            self.transform = compose(reflectX, self.transform)
+        if y > midline:
+            reflectY = lambda (x,y): (x, int(midline - (y - midline)) )
+            self.transform = compose(reflectY, self.transform)
+        if y > x:
+            reflectDiagonal = lambda (x,y): (y,x)
+            self.transform = compose(reflectDiagonal, self.transform)
+
+    def getCoordinates(self, index):
+        x , y = index%self.size, index//self.size
         return x,y
+    
+    def getIndex(self, (x,y)):
+        index = x + y*self.size
+        return index
     
     def findLines(self, sequence):
         size = self.size
@@ -139,7 +167,35 @@ class GameState(object):
             grid[y][x] = p[1]
             
         return grid
+
+    def testTransform(self):
+
+        # Test 1
+        self.size = 4
+        start = 10
+        self.setTransform(start)
+        point = self.getCoordinates(start)
+        print "point: " , point
+        print "point': "  , self.transform(point)
+        print
         
+        seq = [(1,'X'),(2,'O'),(3,'X'),(7,'O'),(11,'X')]
+        print seq
+        for row in self.makeGrid(seq):
+            print row
+        print
+        
+        tseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in seq]
+        print tseq
+        for row in self.makeGrid(tseq):
+            print row
+        print
+        
+        ttseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in tseq]
+        print ttseq
+        for row in self.makeGrid(ttseq):
+            print row
+        print
 
     # def test_lines(self, global_dic = True):
     #     size = self.size
