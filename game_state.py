@@ -67,7 +67,7 @@ class GameState(object):
             self.game_sequence.append( (index, mark) )
             self.Q.updateQ( (self.step,)+tuple( (self.transformIndex(move[0]), move[1]) for move in self.game_sequence) )
         else:
-            print "invalid", mark, index
+            print "invalid move by {} at index {}".format( mark, index)
             self.game_finished = True
             return
         
@@ -94,7 +94,7 @@ class GameState(object):
         for direction in ['Vertical', 'Horizontal', 'Diagonal']:
             
             keys = {'Vertical'  : range(size),
-                    'Horizontal': range(0, size**2 -size , size),
+                    'Horizontal': range(size),
                     'Diagonal'  : ['pos', 'neg']
                     }[direction]
             

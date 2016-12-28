@@ -60,6 +60,8 @@ def run():
     #     while not gs.game_finished:
     #         gs.takeStep()
     #         gs.printGrid(gs.makeGrid(gs.game_sequence))
+    #         print "horizontals: ", gs.lines['Horizontal']
+    #         print "verticals: ", gs.lines['Vertical']
     #         print "diagonals: ", gs.lines['Diagonal']
     #         print
     #     for p in gs.players:
@@ -84,12 +86,13 @@ def run():
     # s = GameState(5)
     # s.test_lines()
 
-    # Problems tallying diagonals
+    # Reproduce buggy games
     cummulativeQ = QMap()    
     gs = GameState(3)
     gs.setQMap(QMap())
     gs.setPlayers(LearningPlayer('X', gs, 'debug'), LearningPlayer('O', gs, 'debug'))
-    problem_sequence =  [(1,'X'), (6, 'O'), (7,'X'), (4, 'O'), (8,'X'), (2, 'O'), (3, 'X'), (5, 'O'), (0, 'X')]    
+    #problem_sequence =  [(1,'X'), (6, 'O'), (7,'X'), (4, 'O'), (8,'X'), (2, 'O'), (3, 'X'), (5, 'O'), (0, 'X')]   # problems with diag
+    problem_sequence = [(0,'X'),(7,'O'),(3,'X'),(6,'O'),(4,'X'),(8,'O'),(2,'X'),(1,'O'),(5,'X')]
     gs.players[0].setDebug(problem_sequence)
     gs.players[1].setDebug(problem_sequence)
 
