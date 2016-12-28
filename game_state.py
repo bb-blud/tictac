@@ -61,7 +61,7 @@ class GameState(object):
         if self.step == 1:
             self.setTransform(index)
   
-        print self.current_player.mark, index
+        #print self.current_player.mark, index # For debugging
         
         if self.validMove(index):
             self.game_sequence.append( (index, mark) )
@@ -93,13 +93,12 @@ class GameState(object):
         # Find 'size' number of consecutive marks in a line, current_player wins
         for direction in ['Vertical', 'Horizontal', 'Diagonal']:
             
-            keys = {'Vertical'  : range(size),
-                    'Horizontal': range(size),
-                    'Diagonal'  : ['pos', 'neg']
-                    }[direction]
-            
+            keys = range(size)    # The possible line keys range from 0 to size -1, unless line is diagonal
+            if direction == 'Diagonal':
+                keys = ['pos', 'neg']
+                
             for line in (self.lines[direction].get(coordinate) for coordinate in keys ):
-                if line is not None and len(line) == size:
+                if line is not None and len(line[1:]) == size:
                     self.current_player.is_winner = True
                     return True
             
@@ -150,13 +149,13 @@ class GameState(object):
         return self.getIndex(self.transform(self.getCoordinates(index)))
     
     def tallyLine(self, direction, coordinate, point):
-        first_point = 0
+        first_point = 1  # Element at index 0 is the player's mark (i.e. X or O)
         tic = 1
         tac = point[1]
         current_line = self.lines[direction].get(coordinate, 'Empty')
         
         if current_line is not None and current_line is 'Empty':
-            self.lines[direction][coordinate] = [point]
+            self.lines[direction][coordinate] = [tac, point]
 
         elif current_line is not None and current_line[first_point][tic] == tac:
             self.lines[direction][coordinate].append(point) if point not in self.lines[direction][coordinate] else None
@@ -180,10 +179,8 @@ class GameState(object):
                     
             # Tally of the two possible diagonal lines
             if x == y:
-                #print 'POS'
                 self.tallyLine('Diagonal', 'pos', point)
             if x + y == size - 1:
-                #print 'NEG'
                 self.tallyLine('Diagonal', 'neg', point)
 
                     
@@ -245,43 +242,23 @@ class GameState(object):
     #             print row
     #         print 'END Test: ', i
 
-    # def test_lines(self, global_dic = True):
+    # def test_lines(self):
     #     size = self.size
-    #     if global_dic:
-    #         # Test cases for lines as a global class variable
-    #         tests = [ 
-    #                   ((size+1,'O'),(size*size -1,'O')),       # Positive Diagonal
+    #     # Test cases for lines as a global class variable
+    #     tests = [ 
+    #               ((size+1,'O'),(size*size -1,'O')),       # Positive Diagonal
 
-    #                   ((size-1,'X'),(size*size - size, 'X')),  # Negative Diagonal
+    #               ((size-1,'X'),(size*size - size, 'X')),  # Negative Diagonal
 
-    #                   ((0,'X'), (1,'X'),(2,'X'), (4,'X')),     # Several in row
+    #               ((0,'X'), (1,'X'),(2,'X'), (4,'X')),     # Several in row
 
-    #                   ((0,'X'), (10,'X'), (15,'X'), (20,'X')), # Several in column
+    #               ((0,'X'), (10,'X'), (15,'X'), (20,'X')), # Several in column
 
-    #                   tuple( (u, ran.choice(['X','O']) ) for u in 
+    #               tuple( (u, ran.choice(['X','O']) ) for u in 
 
-    #                           set([ ran.randint(0,size*size - 1) for _ in range(3*size)]) ) #random sequence of unique moves
+    #                       set([ ran.randint(0,size*size - 1) for _ in range(3*size)]) ) #random sequence of unique moves
 
-    #                   ]
-    #     else:
-    #     # Test cases for lines as an internally generated and returned variable in method findLines
-    #         tests = [ ((0,'X'), (0,'X')),                      # Repeat
-
-    #                   ((size+1,'O'),(size*size -1,'O')),       # Positive Diagonal
-
-    #                   ((size-1,'X'),(size*size - size, 'X')),  # Negative Diagonal
-
-    #                   ((0,'X'), (1,'X'),(2,'X'), (4,'X')),     # Several in row
-
-    #                   ((0,'X'), (10,'X'), (15,'X'), (20,'X')), # Several in column
-
-    #                   ((2, 'X'), (4, 'O'), (5, 'X'), (6, 'X'), (7, 'X'), (9, 'X'), (15, 'X'), (16, 'X'), (19, 'O'), (20, 'X'), (21, 'X'), (23, 'O'), (24, 'X')),
-
-    #                   tuple( (u, ran.choice(['X','O']) ) for u in 
-
-    #                           set([ ran.randint(0,size*size - 1) for _ in range(3*size)]) ) #random sequence of unique moves
-
-    #                   ]
+    #               ]
         
 
     #     for t, test in enumerate(tests):
@@ -292,25 +269,12 @@ class GameState(object):
     #         #####Test#####
     #         print "Test: ", t, test            
     #         print
-    #         for row in grid:
-    #             print row
-
+    #         self.printGrid(grid)
     #         print
-    #         if global_dic:
-    #             self.findLines(test)
-    #             for direction in self.lines:
-    #                 print direction
-    #                 print [
-    #                     (l, self.lines[direction][l]) for l in self.lines[direction] \
 
-    #                     if \
-                        
-    #                        self.lines[direction][l] is not None and len(self.lines[direction][l]) >1
-    #                 ]
-                
-    #         else:
-    #             #lines as local variable
-    #             lns = self.findLines(test)  
-    #             for direction in lns:
-    #                 lines = { coord : lns[direction][coord] for coord in lns[direction] if lns[direction][coord] is not None }
-    #                 print direction, [(line, lns[direction][line]) for line in lines if len(lns[direction][line]) > 1]
+    #         self.updateLines(test)
+    #         for direction in self.lines:
+    #             print direction
+    #             print [ (l, self.lines[direction][l]) for l in self.lines[direction] if
+    #                 self.lines[direction][l] is not None and len(self.lines[direction][l]) >1 ]
+    #         self.resetGame()
