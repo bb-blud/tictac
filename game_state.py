@@ -92,7 +92,13 @@ class GameState(object):
 
         # Find 'size' number of consecutive marks in a line, current_player wins
         for direction in ['Vertical', 'Horizontal', 'Diagonal']:
-            for line in (self.lines[direction].get(coordinate) for coordinate in range(size) + range(0, size**2 -size , size) ):
+            
+            keys = {'Vertical'  : range(size),
+                    'Horizontal': range(0, size**2 -size , size),
+                    'Diagonal'  : ['pos', 'neg']
+                    }[direction]
+            
+            for line in (self.lines[direction].get(coordinate) for coordinate in keys ):
                 if line is not None and len(line) == size:
                     self.current_player.is_winner = True
                     return True
@@ -143,55 +149,42 @@ class GameState(object):
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
     
+    def tallyLine(self, direction, coordinate, point):
+        first_point = 0
+        tic = 1
+        tac = point[1]
+        current_line = self.lines[direction].get(coordinate, 'Empty')
+        
+        if current_line is not None and current_line is 'Empty':
+            self.lines[direction][coordinate] = [point]
+
+        elif current_line is not None and current_line[first_point][tic] == tac:
+            self.lines[direction][coordinate].append(point) if point not in self.lines[direction][coordinate] else None
+
+        else:
+            self.lines[direction][coordinate] = None                
+
+        
     def updateLines(self, sequence):
         size = self.size
         if sequence == []:
             return
         
         for point in sequence:
-            first_point = 0
-            tic = 1
-            tac = point[1]
             x , y = self.getCoordinates(point[0])
 
             # Tally of horizontal and vertical lines
             for direction in ['Horizontal', 'Vertical']:
                 coordinate = {'Vertical': x, 'Horizontal': y}[direction]
-
-                if not self.lines[direction].get(coordinate, False):
-                    self.lines[direction][coordinate] = [point]
-                    
-                elif self.lines[direction][coordinate] is not None and self.lines[direction][coordinate][first_point][tic] == tac:
-                    self.lines[direction][coordinate].append(point) if point not in self.lines[direction][coordinate] else None
-                    
-                else:
-                    self.lines[direction][coordinate] = None
+                self.tallyLine(direction, coordinate, point)
                     
             # Tally of the two possible diagonal lines
-            if x == y or x + y == size - 1:
-                orientation = x==y
-                if not self.lines['Diagonal'].get(orientation, False):
-                    self.lines['Diagonal'][orientation] = [point]
-                    
-                elif self.lines['Diagonal'][orientation] is not None and self.lines['Diagonal'][orientation][first_point][tic] == tac:
-                    self.lines['Diagonal'][orientation].append(point) if point not in self.lines['Diagonal'][orientation] else None
-                    
-                else:
-                    self.lines['Diagonal'][orientation] = None
-    
-                    
-
-
-
-        # if self.step % 2 == 1:
-        #     move = self.players[0].makeMove()
-        #     self.game_sequence.append(move)
-        #     self.Q.updateQ( (self.step,)+tuple(move for move in self.game_sequence) )
-        # else:
-        #     move = self.players[1].makeMove()
-        #     self.game_sequence.append(move)
-        #     self.Q.updateQ( (self.step,)+tuple(move for move in self.game_sequence) )
-        
+            if x == y:
+                #print 'POS'
+                self.tallyLine('Diagonal', 'pos', point)
+            if x + y == size - 1:
+                #print 'NEG'
+                self.tallyLine('Diagonal', 'neg', point)
 
                     
     ################ Tests ####################

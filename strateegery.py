@@ -5,10 +5,11 @@ class Strateegery(object):
         
     def measureState(self):
         gs = self.game_state
-        linesX = 0
-        linesO = 0
-        print gs.lines, "in strateegery"
-        pass
-        #for direction in ['Horizontal', 'Vertical', 'Diagonal']:
-            
-        #return "working on it"
+        size = self.game_state.size
+        weightX = 0
+        weight0 = 0
+        gs.lines, "in strateegery"
+        for direction in ['Horizontal', 'Vertical', 'Diagonal']:
+           print [gs.lines[direction].get(coordinate) for coordinate in range(size) + range(size**2-size, 0, size)]
+        
+        return weightX, "working on it"
