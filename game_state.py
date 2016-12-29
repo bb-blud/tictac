@@ -72,7 +72,7 @@ class GameState(object):
             return
         
         # Update roster of viable consecutive marks in line
-        self.updateLines(self.game_sequence)
+        self.lines = self.findLines(self.game_sequence)
         
         # Update game finish state
         self.game_finished = self.updateFinished()
@@ -148,43 +148,55 @@ class GameState(object):
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
     
-    def tallyLine(self, direction, coordinate, point):
-        first_point = 1  # Element at index 0 is the player's mark (i.e. X or O)
-        tic = 1
-        tac = point[1]
-        current_line = self.lines[direction].get(coordinate, 'Empty')
-        
-        if current_line is not None and current_line is 'Empty':
-            self.lines[direction][coordinate] = [tac, point]
 
-        elif current_line is not None and current_line[first_point][tic] == tac:
-            self.lines[direction][coordinate].append(point) if point not in self.lines[direction][coordinate] else None
-
-        else:
-            self.lines[direction][coordinate] = None                
 
         
-    def updateLines(self, sequence):
+    def findLines(self, sequence):
         size = self.size
-        if sequence == []:
-            return
-        
+        lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
+
+        ###############
+        # Evaluate and append a line in a particular direction at a particular coordinate      
+        def tallyLine(direction, coordinate, point):
+            first_point = 1  # Element at index 0 is the player's mark (i.e. X or O)
+            tic = 1
+            tac = point[1]
+            current_line = lines_in_seq[direction].get(coordinate, 'Empty')
+
+            if current_line is not None and current_line is 'Empty':
+                lines_in_seq[direction][coordinate] = [tac, point]
+
+            elif current_line is not None and current_line[first_point][tic] == tac:
+                lines_in_seq[direction][coordinate].append(point) if point not in lines_in_seq[direction][coordinate] else None
+
+            else:
+                lines_in_seq[direction][coordinate] = None
+                
+        ###############
+        # Check if each point in the game sequence belongs to a line or not
         for point in sequence:
             x , y = self.getCoordinates(point[0])
 
             # Tally of horizontal and vertical lines
             for direction in ['Horizontal', 'Vertical']:
                 coordinate = {'Vertical': x, 'Horizontal': y}[direction]
-                self.tallyLine(direction, coordinate, point)
+                tallyLine(direction, coordinate, point)
                     
             # Tally of the two possible diagonal lines
             if x == y:
-                self.tallyLine('Diagonal', 'pos', point)
+                tallyLine('Diagonal', 'pos', point)
             if x + y == size - 1:
-                self.tallyLine('Diagonal', 'neg', point)
+                tallyLine('Diagonal', 'neg', point)
+
+        return lines_in_seq
+
+
+
 
                     
-    ################ Tests ####################
+###########################################################
+#           Testing functions and code logic
+###########################################################
 
     def makeGrid(self,sequence):
         size = self.size
@@ -200,81 +212,81 @@ class GameState(object):
         for row in grid:
             print row
 
-    # def testTransform(self):
+    def testTransform(self):
         
-    #     tests = [
-    #         [3, 2, (2, 'O')],  #  
-    #         [3, 8, (8, 'O')],  # All corners are equivalent
-    #         [3, 6, (6, 'O')],  #
+        tests = [
+            [3, 2, (2, 'O')],  #  
+            [3, 8, (8, 'O')],  # All corners are equivalent
+            [3, 6, (6, 'O')],  #
 
-    #         [5, 12, (12, 'X')], # Center point doesn't move
+            [5, 12, (12, 'X')], # Center point doesn't move
             
-    #         [4, 10, (10,'1'),(2,'2'),(3,'3'),(7,'4'),(11,'5')]] # Order is preserved
+            [4, 10, (10,'1'),(2,'2'),(3,'3'),(7,'4'),(11,'5')]] # Order is preserved
 
-    #     for i, test in enumerate(tests):
-    #         self.resetGame()
+        for i, test in enumerate(tests):
+            self.resetGame()
             
-    #         print "Test: ", i
-    #         self.size = test[0]
-    #         start = test[1]
-    #         self.setTransform(start)
+            print "Test: ", i
+            self.size = test[0]
+            start = test[1]
+            self.setTransform(start)
 
-    #         point = self.getCoordinates(start)
-    #         print "point: {}, Index: {}".format(point, start)
-    #         print "tpoint: {}, Index: {}".format(self.transform(point), self.getIndex(self.transform(point)) )
-    #         print
+            point = self.getCoordinates(start)
+            print "point: {}, Index: {}".format(point, start)
+            print "tpoint: {}, Index: {}".format(self.transform(point), self.getIndex(self.transform(point)) )
+            print
 
-    #         seq = test[2:]
-    #         print seq
-    #         for row in self.makeGrid(seq):
-    #             print row
-    #         print
+            seq = test[2:]
+            print seq
+            for row in self.makeGrid(seq):
+                print row
+            print
 
-    #         tseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in seq]
-    #         print tseq
-    #         for row in self.makeGrid(tseq):
-    #             print row
-    #         print
+            tseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in seq]
+            print tseq
+            for row in self.makeGrid(tseq):
+                print row
+            print
 
-    #         ttseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in tseq]
-    #         print ttseq
-    #         for row in self.makeGrid(ttseq):
-    #             print row
-    #         print 'END Test: ', i
+            ttseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in tseq]
+            print ttseq
+            for row in self.makeGrid(ttseq):
+                print row
+            print 'END Test: ', i
 
-    # def test_lines(self):
-    #     size = self.size
-    #     # Test cases for lines as a global class variable
-    #     tests = [ 
-    #               ((size+1,'O'),(size*size -1,'O')),       # Positive Diagonal
+    def test_lines(self):
+        size = self.size
+        # Test cases for lines as a global class variable
+        tests = [ 
+                  ((size+1,'O'),(size*size -1,'O')),       # Positive Diagonal
 
-    #               ((size-1,'X'),(size*size - size, 'X')),  # Negative Diagonal
+                  ((size-1,'X'),(size*size - size, 'X')),  # Negative Diagonal
 
-    #               ((0,'X'), (1,'X'),(2,'X'), (4,'X')),     # Several in row
+                  ((0,'X'), (1,'X'),(2,'X'), (4,'X')),     # Several in row
 
-    #               ((0,'X'), (10,'X'), (15,'X'), (20,'X')), # Several in column
+                  ((0,'X'), (10,'X'), (15,'X'), (20,'X')), # Several in column
 
-    #               tuple( (u, ran.choice(['X','O']) ) for u in 
+                  tuple( (u, ran.choice(['X','O']) ) for u in 
 
-    #                       set([ ran.randint(0,size*size - 1) for _ in range(3*size)]) ) #random sequence of unique moves
+                          set([ ran.randint(0,size*size - 1) for _ in range(3*size)]) ) #random sequence of unique moves
 
-    #               ]
+                  ]
         
 
-    #     for t, test in enumerate(tests):
+        for t, test in enumerate(tests):
             
-    #         # Grid            
-    #         grid = self.makeGrid(test)
+            # Grid            
+            grid = self.makeGrid(test)
 
-    #         #####Test#####
-    #         print "Test: ", t, test            
-    #         print
-    #         self.printGrid(grid)
-    #         print
+            #####Test#####
+            print "Test: ", t, test            
+            print
+            self.printGrid(grid)
+            print
 
-    #         self.updateLines(test)
-    #         for direction in self.lines:
-    #             print direction
-    #             print [ (l, self.lines[direction][l]) for l in self.lines[direction] if
-    #                 self.lines[direction][l] is not None and len(self.lines[direction][l]) >1 ]
-    #         self.resetGame()
+            lines_in_seq = self.findLines(test)
+            for direction in lines_in_seq:
+                print direction
+                print [ (l, lines_in_seq[direction][l]) for l in lines_in_seq[direction] if
+                    lines_in_seq[direction][l] is not None and len(lines_in_seq[direction][l]) >1 ]
+            self.resetGame()

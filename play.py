@@ -18,7 +18,8 @@ class LearningPlayer(Player):
             'minimize' : None,
             'debug'    : self.debug}[self.policy]()
 
-        self.strategies.measureState()
+        print self.strategies.measureState()
+        print
         return move
     
     def randomMove(self):
@@ -103,7 +104,7 @@ def run():
     #     print
     # #####
     
-    # # Update lines
+    # # Find lines
     # s = GameState(5)
     # s.test_lines()
     

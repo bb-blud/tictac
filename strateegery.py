@@ -6,11 +6,10 @@ class Strateegery(object):
         
     def measureState(self):
         gs = self.game_state
-        size = self.game_state.size
         state_weight = 0
+        
         for direction in gs.lines:
-
-            keys = range(size)
+            keys = range(self.game_state.size)
             if direction == 'Diagonal':
                 keys = ['pos', 'neg']
                 
