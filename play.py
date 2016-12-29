@@ -1,4 +1,3 @@
-from random import randint
 from game_board import GameBoard
 from game_state import Player, GameState, QMap
 from strateegery import Strateegery
@@ -10,28 +9,14 @@ class LearningPlayer(Player):
         self.strategies  = Strateegery(self.game_state)
         
     def makeMove(self):
-        gs = self.game_state
-        
         move = {
-            'random' : self.randomMove,
-            'maximize' : None,
-            'minimize' : None,
-            'debug'    : self.debug}[self.policy]()
+            'random'   : self.strategies.randomMove,
+            'maximize' : self.strategies.optimize,
+            'minimize' : self.strategies.optimize,            
+            'debug'    : self.debug}[self.policy](self)
 
-        print self.strategies.measureState()
-        print
+        print self.strategies.measureState(self.game_state.game_sequence)
         return move
-    
-    def randomMove(self):
-        size = self.game_state.size
-        valid = False
-        move_index = None
-        while not valid:
-            move_index = randint(0, size**2 - 1)
-            valid = self.game_state.validMove(move_index)
-            
-        return move_index, self.mark
-
     
     ########## Player for debugging ##########
     def setDebug(self, sequence):
@@ -54,7 +39,7 @@ def run():
     ##### Initialize #####
     cummulativeQ = QMap()
     gs = GameState(3)
-    gs.setPlayers(LearningPlayer('X', gs, 'random') ,LearningPlayer('O', gs, 'random' ) )
+    gs.setPlayers(LearningPlayer('X', gs, 'random') ,LearningPlayer('O', gs, 'minimize' ) )
 
     ##### Play Games #####
     n_games = 1
