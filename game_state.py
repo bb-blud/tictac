@@ -55,6 +55,9 @@ class GameState(object):
         if index not in ( m[0] for m in self.game_sequence):
             return True
         return False
+    
+    def otherPlayer(self):
+        return [p for p in self.players if p is not self.current_player][0]
             
     def updateState(self, move):
         index , mark = move        
@@ -78,7 +81,7 @@ class GameState(object):
         self.game_finished = self.updateFinished()
 
         # Set player to have next turn
-        self.current_player = self.players[self.step%2]
+        self.current_player = self.otherPlayer()#self.players[self.step%2]
         
         # Update step count
         self.step += 1
@@ -115,7 +118,8 @@ class GameState(object):
         self.game_sequence = []
         self.transform = lambda (x,y): (x,y)
         self.current_player = self.players[0]
-
+        for p in self.players:
+            p.is_winner = False
 
     def setTransform(self, first_move):
         def compose(f,g):
@@ -148,8 +152,6 @@ class GameState(object):
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
     
-
-
         
     def findLines(self, sequence):
         size = self.size
@@ -191,8 +193,15 @@ class GameState(object):
         return lines_in_seq
 
 
+#####################
+#   Debugging
+#####################
+    
+    def setGameSequence(self, sequence):
+        self.game_sequence = sequence
 
-
+    def setCurrentPlayer(self, player):
+        self.current_player = player
                     
 ###########################################################
 #           Testing functions and code logic
@@ -211,6 +220,14 @@ class GameState(object):
     def printGrid(self, grid):
         for row in grid:
             print row
+
+    def printGame(self):
+        self.printGrid(self.makeGrid(self.game_sequence))
+        print "horizontals: ", self.lines['Horizontal']
+        print "verticals: ", self.lines['Vertical']
+        print "diagonals: ", self.lines['Diagonal']
+        print        
+        
 
     def testTransform(self):
         
