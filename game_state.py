@@ -148,47 +148,63 @@ class GameState(object):
     def getIndex(self, (x,y)):
         index = x + y*self.size
         return index
-    
+
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
-    
-        
+
+    def indexInLine(self, index, direction, line):
+        first_point = 1
+        if direction == 'Horizontal':
+            if self.getCoordinates(index)[1] == self.getCoordinates(line[first_point])[1]:
+                return True
+        if direction == 'Vertical':
+            if self.getCoordinates(index)[0] == self.getCoordinates(line[first_point])[0]:
+                return True
+        if direction == 'Diagonal':
+            x, y  = self.getCoordinates(index)
+            u1, v1= self.getCoordinates(line[first_point])
+            u2, v2= self.getCoordinates(line[first_point+1])
+
+            slope = (1.0*v2 - v1)/(u2 -u1)
+            
+            if slope == (1.0*y - v1)/(x -u1):
+                return True
+
     def findLines(self, sequence):
         size = self.size
         lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
 
         ###############
         # Evaluate and append a line in a particular direction at a particular coordinate      
-        def tallyLine(direction, coordinate, point):
-            first_point = 1  # Element at index 0 is the player's mark (i.e. X or O)
-            tic = 1
-            tac = point[1]
+        def tallyLine(direction, coordinate, move):
+            tic = 0
+            tac = move[1]
             current_line = lines_in_seq[direction].get(coordinate, 'Empty')
 
             if current_line is not None and current_line is 'Empty':
-                lines_in_seq[direction][coordinate] = [tac, point]
+                lines_in_seq[direction][coordinate] = [tac, move[0]]
 
-            elif current_line is not None and current_line[first_point][tic] == tac:
-                lines_in_seq[direction][coordinate].append(point) if point not in lines_in_seq[direction][coordinate] else None
+            elif current_line is not None and current_line[tic]== tac:
+                lines_in_seq[direction][coordinate].append(move[0]) if move[0] not in lines_in_seq[direction][coordinate] else None
 
             else:
                 lines_in_seq[direction][coordinate] = None
                 
         ###############
         # Check if each point in the game sequence belongs to a line or not
-        for point in sequence:
-            x , y = self.getCoordinates(point[0])
+        for move in sequence:
+            x , y = self.getCoordinates(move[0])
 
             # Tally of horizontal and vertical lines
             for direction in ['Horizontal', 'Vertical']:
                 coordinate = {'Vertical': x, 'Horizontal': y}[direction]
-                tallyLine(direction, coordinate, point)
+                tallyLine(direction, coordinate, move)
                     
             # Tally of the two possible diagonal lines
             if x == y:
-                tallyLine('Diagonal', 'pos', point)
+                tallyLine('Diagonal', 'pos', move)
             if x + y == size - 1:
-                tallyLine('Diagonal', 'neg', point)
+                tallyLine('Diagonal', 'neg', move)
 
         return lines_in_seq
 

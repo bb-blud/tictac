@@ -11,11 +11,14 @@ class LearningPlayer(Player):
     def makeMove(self):
         move = {
             'random'   : self.strategies.randomMove,
-            'maximize' : self.strategies.optimize,
-            'minimize' : self.strategies.optimize,            
+            'ideal'    : self.strategies.ideal,
             'debug'    : self.debug}[self.policy](self)
 
 #        print self.strategies.measureState(self.game_state.game_sequence)
+        print "current player: ", self.game_state.current_player.mark
+        self.game_state.printGame()
+        print
+
         return move
     
     ########## Player for debugging ##########
@@ -27,7 +30,7 @@ class LearningPlayer(Player):
         self.Omoves = deque([move for move in self.problem_sequence if move[1] == 'O'])
         
     def debug(self, player):
-        self.strategies.optimize(self)
+        self.strategies.ideal(self)
         if self.inDebug:
             if self.mark == 'X':
                 return self.Xmoves.popleft()
@@ -35,12 +38,11 @@ class LearningPlayer(Player):
                 return self.Omoves.popleft()
         return
 
-        
 def run():
     # ##### Initialize #####
     # cummulativeQ = QMap()
     # gs = GameState(3)
-    # gs.setPlayers(LearningPlayer('X', gs, 'random') ,LearningPlayer('O', gs, 'minimize' ) )
+    # gs.setPlayers(LearningPlayer('X', gs, 'random') ,LearningPlayer('O', gs, 'ideal' ) )
 
     # ##### Play Games #####
     # n_games = 1
@@ -48,7 +50,7 @@ def run():
     #     gs.setQMap(cummulativeQ)     
     #     while not gs.game_finished:
     #         gs.takeStep()
-    #         gs.printGame()
+    #     gs.printGame()
 
     #     for p in gs.players:
     #         print p.mark, "is winner: ", p.is_winner
@@ -72,19 +74,19 @@ def run():
     cummulativeQ = QMap()    
     gs = GameState(3)
     gs.setQMap(QMap())
-    gs.setPlayers(LearningPlayer('X', gs, 'minimize'), LearningPlayer('O', gs, 'minimize'))
+    gs.setPlayers(LearningPlayer('X', gs, 'debug'), LearningPlayer('O', gs, 'ideal'))
     #problem_sequence =  [(1,'X'), (6, 'O'), (7,'X'), (4, 'O'), (8,'X'), (2, 'O'), (3, 'X'), (5, 'O'), (0, 'X')]   # problems with diag
     #problem_sequence = [(0,'X'),(7,'O'),(3,'X'),(6,'O'),(4,'X'),(8,'O'),(2,'X'),(1,'O'),(5,'X')] # problems horizontal tally
     #problem_sequence = [(4, 'X'), (0,'O'), (1,'X'), (6, 'O'), (3, 'X'), (5, 'O'), (7, 'X')]  # Optimize fail (X-random, O-minimize)
-    #problem_sequence =  [(2, 'X'), (4, 'O'), (6, 'X'), (0, 'O'), (8, 'X'), (5, 'O'), (7, 'X')]# Corner powned
-    gs.setGameSequence([(2, 'X'), (4, 'O'), (6, 'X')]) # Corner powned
+    problem_sequence =  [(2, 'X'), (4, 'O'), (6, 'X'), (0, 'O'), (8, 'X'), (5, 'O'), (7, 'X')]# Corner powned
+    #gs.setGameSequence([(2, 'X'), (4, 'O'), (6, 'X')]) # Corner powned
     # gs.setCurrentPlayer(gs.players[1])
     # problem_sequence  =[(0, 'O'), (8, 'X'), (5, 'O'), (7, 'X')]  # Corner powned
 
     #gs.setGameSequence([(2, 'X')])
-    gs.setCurrentPlayer(gs.players[1])
+    #gs.setCurrentPlayer(gs.players[1])
 
-    #gs.players[0].setDebug(problem_sequence)
+    gs.players[0].setDebug(problem_sequence)
     #gs.players[1].setDebug(problem_sequence)
 
     while not gs.game_finished:
