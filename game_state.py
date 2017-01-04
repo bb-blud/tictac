@@ -51,8 +51,8 @@ class GameState(object):
     def getQMap(self):
         return self.Q
     
-    def validMove(self, index):
-        if index not in ( m[0] for m in self.game_sequence):
+    def validMove(self, index, sequence):
+        if index not in ( m[0] for m in sequence):
             return True
         return False
     
@@ -66,7 +66,7 @@ class GameState(object):
   
         #print self.current_player.mark, index # For debugging
         
-        if self.validMove(index):
+        if self.validMove(index, self.game_sequence):
             self.game_sequence.append( (index, mark) )
             self.Q.updateQ( (self.step,)+tuple( (self.transformIndex(move[0]), move[1]) for move in self.game_sequence) )
         else:
@@ -166,7 +166,6 @@ class GameState(object):
             u2, v2= self.getCoordinates(line[first_point+1])
 
             slope = (1.0*v2 - v1)/(u2 -u1)
-            
             if slope == (1.0*y - v1)/(x -u1):
                 return True
 
@@ -215,6 +214,7 @@ class GameState(object):
     
     def setGameSequence(self, sequence):
         self.game_sequence = sequence
+        self.step += len(sequence)
 
     def setCurrentPlayer(self, player):
         self.current_player = player
