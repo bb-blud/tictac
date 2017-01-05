@@ -35,7 +35,7 @@ class GameState(object):
         # Initialize state variables
         self.game_finished = False
         self.step = 1
-        self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
+        self.lines = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg':{} }
         self.game_sequence = []
 
         # For global coordinate transform
@@ -94,11 +94,11 @@ class GameState(object):
         size = self.size
 
         # Find 'size' number of consecutive marks in a line, current_player wins
-        for direction in ['Vertical', 'Horizontal', 'Diagonal']:
+        for direction in ['Vertical', 'Horizontal', 'D-pos', 'D-neg']:
             
             keys = range(size)    # The possible line keys range from 0 to size -1, unless line is diagonal
-            if direction == 'Diagonal':
-                keys = ['pos', 'neg']
+            if direction in ['D-pos', 'D-neg']:
+                keys = [0]
                 
             for line in (self.lines[direction].get(coordinate) for coordinate in keys ):
                 if line is not None and len(line[1:]) == size:
@@ -114,12 +114,13 @@ class GameState(object):
     def resetGame(self):
         self.game_finished = False
         self.step = 1
-        self.lines = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
+        self.lines = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg': {} }
         self.game_sequence = []
         self.transform = lambda (x,y): (x,y)
         self.current_player = self.players[0]
         for p in self.players:
-            p.is_winner = False
+            if p:
+                p.is_winner = False
 
     def setTransform(self, first_move):
         def compose(f,g):
@@ -152,26 +153,10 @@ class GameState(object):
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
 
-    def indexInLine(self, index, direction, line):
-        first_point = 1
-        if direction == 'Horizontal':
-            if self.getCoordinates(index)[1] == self.getCoordinates(line[first_point])[1]:
-                return True
-        if direction == 'Vertical':
-            if self.getCoordinates(index)[0] == self.getCoordinates(line[first_point])[0]:
-                return True
-        if direction == 'Diagonal':
-            x, y  = self.getCoordinates(index)
-            u1, v1= self.getCoordinates(line[first_point])
-            u2, v2= self.getCoordinates(line[first_point+1])
-
-            slope = (1.0*v2 - v1)/(u2 -u1)
-            if slope == (1.0*y - v1)/(x -u1):
-                return True
-
+                                        
     def findLines(self, sequence):
         size = self.size
-        lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'Diagonal': {} }
+        lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg': {} }
 
         ###############
         # Evaluate and append a line in a particular direction at a particular coordinate      
@@ -201,11 +186,45 @@ class GameState(object):
                     
             # Tally of the two possible diagonal lines
             if x == y:
-                tallyLine('Diagonal', 'pos', move)
+                tallyLine('D-pos', 0, move)
             if x + y == size - 1:
-                tallyLine('Diagonal', 'neg', move)
+                tallyLine('D-neg', 0, move)
 
         return lines_in_seq
+
+
+    def belongsToLine(self, index, direction, line):
+        first_point = 1
+        if direction == 'Horizontal':
+            if self.getCoordinates(index)[1] == self.getCoordinates(line[first_point])[1]:
+                return True
+        elif direction == 'Vertical':
+            if self.getCoordinates(index)[0] == self.getCoordinates(line[first_point])[0]:
+                return True
+        else:
+            x, y = self.getCoordinates(index)
+            u, v = self.getCoordinates(line[first_point])
+            slope = (1.*v - y)/(u - x)
+            if direction == 'D-pos' and slope == 1:
+                return True
+            if direction == 'D-neg' and slope == -1:
+                return True
+            return False
+            
+    def indexToWin(self, direction, line):
+        size = self.size
+        if len(line[1:]) != size -1:
+            return None
+        
+        i = {'Vertical': line[1]%size, 'Horizontal' : line[1]//size }[direction]
+        
+        return  {'D-neg'     : [k for k in range(size -1, size**2, size-1)[:-1] if k not in line[1:]][0],
+                 
+                 'D-pos'     : [k for k in range(0, size**2, size+1) if k not in line[1:]][0],
+                 
+                 'Vertical'  : [k for k in range(i, i + size**2, size) if k not in line[1:]][0],
+                 
+                 'Horizontal': [k for k in range(i*size, i*size +size) if k not in line[:1]][0]  } [direction]
 
 
 #####################
@@ -241,7 +260,8 @@ class GameState(object):
         self.printGrid(self.makeGrid(self.game_sequence))
         print "horizontals: ", self.lines['Horizontal']
         print "verticals: ", self.lines['Vertical']
-        print "diagonals: ", self.lines['Diagonal']
+        print "d-pos: ", self.lines['D-pos']
+        print "d-neg: ", self.lines['D-neg']                     
         print        
         
 

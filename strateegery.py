@@ -12,8 +12,8 @@ class Strateegery(object):
 
         for direction in lines:
             keys = range(size)
-            if direction == 'Diagonal':
-                keys = ['pos', 'neg']
+            if direction in ['D-pos', 'D-neg']:
+                keys = [0]
                 
             viables = [coord for coord in keys if  lines[direction].get(coord, "Empty") not in ["Empty", None]]
             
@@ -43,7 +43,7 @@ class Strateegery(object):
             # 1st priority, Block opponent from winning or win game                                                     
             # 
             for strategy in ['gain', 'block']:
-                p = {'block' : opponent,'gain' : player}[strategy]
+                p = {'block' : opponent, 'gain' : player}[strategy]
 
                 for i in valid_indicies:                             
                     test_seq = gs.game_sequence[:] + [(i, p.mark)]   
@@ -56,7 +56,7 @@ class Strateegery(object):
             # 2nd priority, Block opponent's fork or fork
             #
             for strategy in ['gain', 'block']:
-                p = {'block' : opponent,'gain' : player}[strategy]
+                p = {'block' : opponent, 'gain' : player}[strategy]
 
                 for i in valid_indicies:
                     test_seq = gs.game_sequence[:] + [(i, p.mark)]
@@ -64,20 +64,20 @@ class Strateegery(object):
                     forks = self.linesOfRankN(size - 1, test_seq, p)
 
                     if forks != [] and len(forks) >=2:
+
                         if strategy == 'block':
                             block_lines = self.linesOfRankN(size - 2, test_seq,  player)
-                            print forks
-                            print block_lines
-                            print [index for index in (k for k in valid_indicies if k is not i)]
+
                             for index in (k for k in valid_indicies if k is not i):
-                                print index
-                                if True not in [gs.indexInLine(index, f_line[0], f_line[1]) for f_line in forks]:
-
-                                    for b_line in block_lines:
-                                        if gs.indexInLine(index, b_line[0], b_line[1]):
-                                            print "fork", index, player.mark, strategy
+                                for b_line in block_lines:
+                                    
+                                    if gs.belongsToLine(index, b_line[0], b_line[1]):
+                                        index_to_win = gs.indexToWin(b_line[0], b_line[1] + [index])
+                                        block_fork_seq = test_seq + [(index, player.mark),(index_to_win, opponent.mark)]
+                                        
+                                        if len(self.linesOfRankN(size - 1, block_fork_seq, opponent)) < 2: # No forks any longer
                                             return index, player.mark
-
+                                        
                         if strategy == 'gain':
                             print "fork", i, player.mark, strategy
                             return i, player.mark
@@ -86,7 +86,7 @@ class Strateegery(object):
         #
         index_measures = {'block':{}, 'gain':{}}
         for strategy in ['gain', 'block']:
-            p = {'block' : opponent,'gain' : player}[strategy]
+            p = {'block' : opponent, 'gain' : player}[strategy]
         
             for i in valid_indicies:
                 test_seq = gs.game_sequence[:] + [(i, p.mark)]
@@ -119,4 +119,8 @@ class Strateegery(object):
             valid = self.game_state.validMove(move_index, self.game_state.game_sequence)
             
         return move_index, player.mark    
-        
+
+    
+# print forks
+# print block_lines
+# print [index for index in (k for k in valid_indicies if k is not i)]
