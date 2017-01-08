@@ -14,7 +14,8 @@ class LearningPlayer(Player):
             'ideal'    : self.strategies.ideal,
             'debug'    : self.debug}[self.policy](self)
 
-        print
+        print 'MINIMAX', self.strategies.minimaxMove(self)
+        print 
 
         return move
     

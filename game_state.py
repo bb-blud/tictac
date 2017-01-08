@@ -89,19 +89,39 @@ class GameState(object):
     def takeStep(self):
         move = self.current_player.makeMove()
         self.updateState(move)
-            
+
+    def isTie(self, sequence):
+        size = self.size
+        lines = self.findLines(sequence)
+
+        lv = len(lines['Vertical'].keys())
+        lh = len(lines['Horizontal'].keys())
+        
+        if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:
+            if False not in (lines['Vertical'][k] == lines['Horizontal'][k] for k in range(size)):
+                return True
+        return False
+        
     def updateFinished(self):
         size = self.size
 
+        lv = len(self.lines['Vertical'].keys())
+        lh = len(self.lines['Horizontal'].keys())
+        
+        # If there are no lines left that can have size amount of marks no player wins
+        if lv == size and lh == size and self.lines['D-pos'][0] == None and self.lines['D-neg'][0] == None:
+            if False not in (self.lines['Vertical'][k] == self.lines['Horizontal'][k] for k in range(size)):
+                return True
+            
         # Find 'size' number of consecutive marks in a line, current_player wins
         for direction in ['Vertical', 'Horizontal', 'D-pos', 'D-neg']:
-            
+                        
             keys = range(size)    # The possible line keys range from 0 to size -1, unless line is diagonal
             if direction in ['D-pos', 'D-neg']:
                 keys = [0]
                 
             for line in (self.lines[direction].get(coordinate) for coordinate in keys ):
-                if line is not None and len(line[1:]) == size:
+                if line is not None and len(line) - 1 == size: # line's first entry is players mark
                     self.current_player.is_winner = True
                     return True
             
