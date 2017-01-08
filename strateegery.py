@@ -56,7 +56,7 @@ class Strateegery(object):
             
         # reward max/min for a player win
         sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
-        measure += sgn * size**2*100 * len(self.linesOfRankN(size, sequence, player))
+        measure += sgn * size**4 * len(self.linesOfRankN(size, sequence, player))
             
         return measure
         
@@ -106,7 +106,7 @@ class Strateegery(object):
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
-            mm = self.minimax(gs.game_sequence + [move], 4 , -200, 200, player)
+            mm = self.minimax(gs.game_sequence + [move], 3 , -200, 200, player)
             moves.append([mm, move])
         return moves
                     
