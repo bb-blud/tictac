@@ -24,7 +24,6 @@ class Strateegery(object):
                     
         return n_ranked
 
-
     ###########################################################
     # Random strategy
     ###########################################################
@@ -109,10 +108,11 @@ class Strateegery(object):
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
-            mm = self.minimax(gs.game_sequence[:] + [move], 3, -size*2, size*2, opponent)
+            mm = self.minimax(gs.game_sequence[:] + [move], 2, -size*2, size*2, opponent)
             moves.append((mm, move))
 
         return optimal(moves)[1]
+    
     ##########################################################
     # Original attempt at an optimal ('ideal') strategy
     ##########################################################
@@ -187,9 +187,7 @@ class Strateegery(object):
 
         max_block_index = max(index_measures['block'], key=index_measures['block'].get)
         max_gain_index = max(index_measures['gain'], key=index_measures['gain'].get)
-        
-        print index_measures['block']                            #
-        print index_measures['gain']                             #
+
         print 'at indicies: ', max_block_index, max_gain_index   # Debug
         
         # Return move of most measure or block the opponent's

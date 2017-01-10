@@ -37,7 +37,7 @@ class LearningPlayer(Player):
 def run():
     ##### Initialize #####
     cummulativeQ = QMap()
-    gs = GameState(5)
+    gs = GameState(7)
     gs.setPlayers(LearningPlayer('X', gs, 'minimax') ,LearningPlayer('O', gs, 'ideal' ) )
 
     ##### Play Games #####
