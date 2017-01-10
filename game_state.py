@@ -98,8 +98,10 @@ class GameState(object):
         lh = len(lines['Horizontal'].keys())
         
         if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:
-            if False not in (lines['Vertical'][k] == lines['Horizontal'][k] for k in range(size)):
+            Nones = [None for _ in range(size)]
+            if [lines['Vertical'][k] for k in range(size) ] == Nones and [lines['Horizontal'][k] for k in range(size) ] == Nones:
                 return True
+                
         return False
         
     def updateFinished(self):
@@ -108,11 +110,6 @@ class GameState(object):
         lv = len(self.lines['Vertical'].keys())
         lh = len(self.lines['Horizontal'].keys())
         
-        # If there are no lines left that can have size amount of marks no player wins
-        if lv == size and lh == size and self.lines['D-pos'][0] == None and self.lines['D-neg'][0] == None:
-            if False not in (self.lines['Vertical'][k] == self.lines['Horizontal'][k] for k in range(size)):
-                return True
-            
         # Find 'size' number of consecutive marks in a line, current_player wins
         for direction in ['Vertical', 'Horizontal', 'D-pos', 'D-neg']:
                         
@@ -124,10 +121,16 @@ class GameState(object):
                 if line is not None and len(line) - 1 == size: # line's first entry is players mark
                     self.current_player.is_winner = True
                     return True
-            
-        # All positions filled no winner
-        if len(self.game_sequence) >= self.size**2:
-            return True
+
+        # If there are no lines left that can have size amount of marks no player wins
+        print self.lines
+        if lv == size and lh == size and self.lines['D-pos'].get(0, None) == None and self.lines['D-neg'].get(0, None) == None:
+            Nones = [None for _ in range(size)]
+            if [self.lines['Vertical'][k] for k in range(size) ] == Nones and [self.lines['Horizontal'][k] for k in range(size) ] == Nones:
+                return True
+        # # All positions filled no winner
+        # if len(self.game_sequence) >= self.size**2:
+        #     return True
         
         return False        
         

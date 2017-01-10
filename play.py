@@ -11,11 +11,9 @@ class LearningPlayer(Player):
     def makeMove(self):
         move = {
             'random'   : self.strategies.randomMove,
+            'minimax'  : self.strategies.minimaxMove,
             'ideal'    : self.strategies.ideal,
             'debug'    : self.debug}[self.policy](self)
-
-        print 'MINIMAX', self.strategies.minimaxMove(self)
-        print 
 
         return move
     
@@ -39,8 +37,8 @@ class LearningPlayer(Player):
 def run():
     ##### Initialize #####
     cummulativeQ = QMap()
-    gs = GameState(3)
-    gs.setPlayers(LearningPlayer('X', gs, 'ideal') ,LearningPlayer('O', gs, 'ideal' ) )
+    gs = GameState(5)
+    gs.setPlayers(LearningPlayer('X', gs, 'minimax') ,LearningPlayer('O', gs, 'ideal' ) )
 
     ##### Play Games #####
     n_games = 1

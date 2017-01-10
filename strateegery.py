@@ -48,16 +48,15 @@ class Strateegery(object):
         
         if gs.isTie(sequence):
             return 0
-        
+
         for n in range(1,size):
             measure += n * len(self.linesOfRankN(n, sequence, gs.players[0]))
         for n in range(1,size):
             measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))
-            
+
         # reward max/min for a player win
         sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
-        measure += sgn * size**4 * len(self.linesOfRankN(size, sequence, player))
-            
+        measure += sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))
         return measure
         
     def isLeaf(self, sequence, player):
@@ -70,28 +69,29 @@ class Strateegery(object):
     def minimax(self, sequence, depth, Min, Max, player):
         gs = self.game_state
         size = gs.size
+        opponent = [p for p in gs.players if p.mark is not player.mark][0]
 
         if self.isLeaf(sequence, player) or depth == 0:
             return self.minimaxMeasure(sequence, player)
 
-        valid_indices = [ index for index in range(size**2) if gs.validMove(index, sequence) ]
+        valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ]
         ## Max
-        if  player == gs.players[0]:  
+        if  player == gs.players[0]:
             v = Min
-            for i in valid_indices:
+            for i in valid_i:
                 child_seq = sequence[:] + [(i, player.mark)]
-                v_c = self.minimax(child_seq, depth-1, v, Max, player)
+                v_c = self.minimax(child_seq, depth-1, v, Max, opponent)
                 if v_c > v:
                     v = v_c
                 if v > Max:
                     return Max
             return v
         ## Min
-        else:                         
+        else:
             v = Max
-            for i in valid_indices:
+            for i in valid_i:
                 child_seq = sequence[:] + [(i, player.mark)]
-                v_c = self.minimax(child_seq, depth-1, Min, v, player)
+                v_c = self.minimax(child_seq, depth-1, Min, v, opponent)
                 if v_c < v:
                     v = v_c
                 if v < Min:
@@ -101,15 +101,18 @@ class Strateegery(object):
     def minimaxMove(self, player):
         gs = self.game_state
         size = gs.size
+        opponent = gs.otherPlayer()
+        
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
+        optimal = {gs.players[0].mark : max, gs.players[1].mark : min}[player.mark]
 
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
-            mm = self.minimax(gs.game_sequence + [move], 3 , -200, 200, player)
-            moves.append([mm, move])
-        return moves
-                    
+            mm = self.minimax(gs.game_sequence[:] + [move], 3, -size*2, size*2, opponent)
+            moves.append((mm, move))
+
+        return optimal(moves)[1]
     ##########################################################
     # Original attempt at an optimal ('ideal') strategy
     ##########################################################
@@ -126,22 +129,20 @@ class Strateegery(object):
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
         opponent = gs.otherPlayer()
 
-        print gs.step
+        # 1st priority, Block opponent from winning or win game                                                     
+        # 
+        for strategy in ['gain', 'block']:
+            p = {'block' : opponent, 'gain' : player}[strategy]
 
-        if gs.step >= 4*size - 9:  # Only check when game is sufficiently developed
+            for i in valid_indices:                             
+                test_seq = gs.game_sequence[:] + [(i, p.mark)]   
 
-            # 1st priority, Block opponent from winning or win game                                                     
-            # 
-            for strategy in ['gain', 'block']:
-                p = {'block' : opponent, 'gain' : player}[strategy]
+                full_line = self.linesOfRankN(size, test_seq, p)
+                if full_line != []:
+                    print "win/block", i, player.mark, strategy
+                    return i, player.mark        
 
-                for i in valid_indices:                             
-                    test_seq = gs.game_sequence[:] + [(i, p.mark)]   
-
-                    full_line = self.linesOfRankN(size, test_seq, p)
-                    if full_line != []:
-                        print "win/block", i, player.mark, strategy
-                        return i, player.mark
+        if gs.step >= 4*size - 9:  # Check Only check when game is sufficiently developed
 
             # 2nd priority, Block opponent's fork or fork
             #
