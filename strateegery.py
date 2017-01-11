@@ -4,7 +4,6 @@ class Strateegery(object):
     def __init__(self, game_state):
         self.game_state = game_state
 
-
     def linesOfRankN(self, N, sequence, player):
         gs = self.game_state
         size = gs.size
@@ -19,7 +18,7 @@ class Strateegery(object):
             viables = [coord for coord in keys if  lines[direction].get(coord, "Empty") not in ["Empty", None]]
             
             for line in (lines[direction][coord] for coord in viables):
-                if line[0] == player.mark and len(line) - 1 == N: # first entry is mark
+                if line[0] == player.mark and len(line) - 1 == N: # first entry is a mark
                     n_ranked.append((direction, line))
                     
         return n_ranked
@@ -188,8 +187,6 @@ class Strateegery(object):
         max_block_index = max(index_measures['block'], key=index_measures['block'].get)
         max_gain_index = max(index_measures['gain'], key=index_measures['gain'].get)
 
-        print 'at indicies: ', max_block_index, max_gain_index   # Debug
-        
         # Return move of most measure or block the opponent's
         #
         if index_measures['gain'][max_gain_index] >= index_measures['block'][max_block_index]:  
@@ -198,15 +195,3 @@ class Strateegery(object):
         else:
             print "measure block", max_block_index, player.mark
             return max_block_index, player.mark
-        
-
-
-
-
-
-
-
-        
-# print forks
-# print block_lines
-# print [index for index in (k for k in valid_indices if k is not i)]

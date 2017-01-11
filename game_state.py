@@ -16,11 +16,23 @@ class QMap(object):
     def __init__(self):
         self.Q = {}
         
-    def updateQ(self, move_sequence):
-        if not self.Q.get(move_sequence, False):
-            self.Q[move_sequence] = 1
+    def visitQ(self, sequence):        
+        if not self.Q.get(sequence, False):
+            self.Q[sequence] = 0
+
+    def updateQ(self, game, players, size):
+        
+        if True not in (player.is_winner for player in players):
+            reward = 0
         else:
-            self.Q[move_sequence] += 1
+            reward = size**4 / len(game)
+
+            winner = [p for p in players if p.is_winner][0]
+            sgn = { players[0].mark : 1, players[1].mark : -1 }[winner.mark]
+        
+            for i in range(1, len(game)):
+                sub_sequence = tuple(game[:i])
+                self.Q[sub_sequence] += sgn * reward
 
     def getQ(self):
         return self.Q
@@ -56,19 +68,18 @@ class GameState(object):
             return True
         return False
     
-    def otherPlayer(self):
-        return [p for p in self.players if p is not self.current_player][0]
-            
+    def takeStep(self):
+        move = self.current_player.makeMove()
+        self.updateState(move)
+
     def updateState(self, move):
         index , mark = move        
         if self.step == 1:
             self.setTransform(index)
-  
-        #print self.current_player.mark, index # For debugging
-        
+
         if self.validMove(index, self.game_sequence):
-            self.game_sequence.append( (index, mark) )
-            self.Q.updateQ( (self.step,)+tuple( (self.transformIndex(move[0]), move[1]) for move in self.game_sequence) )
+             self.game_sequence.append( (index, mark) )
+             self.Q.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
         else:
             print "invalid move by {} at index {}".format( mark, index)
             self.game_finished = True
@@ -80,29 +91,18 @@ class GameState(object):
         # Update game finish state
         self.game_finished = self.updateFinished()
 
+        # Update Q map
+        if self.game_finished:
+            t_game_sequence = [ (self.transformIndex(index) , mark ) for index, mark in self.game_sequence ]
+            self.Q.updateQ(t_game_sequence, self.players, self.size)
+        #     for key in self.Q.getQ().keys():
+        #         print key
+            
         # Set player to have next turn
-        self.current_player = self.otherPlayer()#self.players[self.step%2]
+        self.current_player = self.otherPlayer()
         
         # Update step count
         self.step += 1
-        
-    def takeStep(self):
-        move = self.current_player.makeMove()
-        self.updateState(move)
-
-    def isTie(self, sequence):
-        size = self.size
-        lines = self.findLines(sequence)
-
-        lv = len(lines['Vertical'].keys())
-        lh = len(lines['Horizontal'].keys())
-        
-        if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:
-            Nones = [None for _ in range(size)]
-            if [lines['Vertical'][k] for k in range(size) ] == Nones and [lines['Horizontal'][k] for k in range(size) ] == Nones:
-                return True
-                
-        return False
         
     def updateFinished(self):
         size = self.size
@@ -123,16 +123,26 @@ class GameState(object):
                     return True
 
         # If there are no lines left that can have size amount of marks no player wins
-        print self.lines
         if lv == size and lh == size and self.lines['D-pos'].get(0, None) == None and self.lines['D-neg'].get(0, None) == None:
             Nones = [None for _ in range(size)]
             if [self.lines['Vertical'][k] for k in range(size) ] == Nones and [self.lines['Horizontal'][k] for k in range(size) ] == Nones:
                 return True
-        # # All positions filled no winner
-        # if len(self.game_sequence) >= self.size**2:
-        #     return True
         
         return False        
+
+    def isTie(self, sequence):
+        size = self.size
+        lines = self.findLines(sequence)
+
+        lv = len(lines['Vertical'].keys())
+        lh = len(lines['Horizontal'].keys())
+        
+        if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:
+            Nones = [None for _ in range(size)]
+            if [lines['Vertical'][k] for k in range(size) ] == Nones and [lines['Horizontal'][k] for k in range(size) ] == Nones:
+                return True
+                
+        return False
         
     def resetGame(self):
         self.game_finished = False
@@ -165,6 +175,9 @@ class GameState(object):
             reflectDiagonal = lambda (x,y): (y,x)
             self.transform = compose(reflectDiagonal, self.transform)
 
+    def otherPlayer(self):
+        return [p for p in self.players if p is not self.current_player][0]
+
     def getCoordinates(self, index):
         x , y = index%self.size, index//self.size
         return x,y
@@ -175,7 +188,6 @@ class GameState(object):
 
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
-
                                         
     def findLines(self, sequence):
         size = self.size
@@ -215,7 +227,6 @@ class GameState(object):
 
         return lines_in_seq
 
-
     def belongsToLine(self, index, direction, line):
         first_point = 1
         if direction == 'Horizontal':
@@ -236,7 +247,7 @@ class GameState(object):
             
     def indexToWin(self, direction, line):
         size = self.size
-        if len(line[1:]) != size -1:
+        if len(line[1:]) != size - 1:
             return None
         
         i = {'Vertical': line[1]%size, 'Horizontal' : line[1]//size }[direction]
@@ -249,7 +260,6 @@ class GameState(object):
                  
                  'Horizontal': [k for k in range(i*size, i*size +size) if k not in line[:1]][0]  } [direction]
 
-
 #####################
 #   Debugging
 #####################
@@ -260,11 +270,7 @@ class GameState(object):
 
     def setCurrentPlayer(self, player):
         self.current_player = player
-                    
-###########################################################
-#           Testing functions and code logic
-###########################################################
-
+        
     def makeGrid(self,sequence):
         size = self.size
         grid = [ [' ' for i in range(size)] for j in range(size) ]
@@ -285,8 +291,11 @@ class GameState(object):
         print "verticals: ", self.lines['Vertical']
         print "d-pos: ", self.lines['D-pos']
         print "d-neg: ", self.lines['D-neg']                     
-        print        
+        print
         
+###########################################################
+#           Testing functions and code logic
+###########################################################
 
     def testTransform(self):
         
