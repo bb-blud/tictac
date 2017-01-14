@@ -255,7 +255,8 @@ class GameState(object):
         size = self.size
         if len(line[1:]) != size - 1:
             return None
-        
+
+        i = 0
         if direction in ['Vertical' , 'Horizontal']:
             i = {'Vertical': line[1]%size, 'Horizontal' : line[1]//size }[direction]
         
