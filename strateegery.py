@@ -42,7 +42,6 @@ class Strateegery(object):
     def reinforcement(self, player, threshold = .3):
         gs = self.game_state
         Q = gs.QMap.Q
-        print gs.set_transform
         
         if Q == {} and gs.step == 1:
             print "empty dict"
@@ -64,9 +63,9 @@ class Strateegery(object):
         # print
         # print 'charted', [seq[-1][0] for seq in charted]
         # print
-        # print 'uncharted', uncharted_i
+        print 'uncharted', uncharted_i
        
-        if uncharted_i and random.random() > threshold:
+        if uncharted_i and random.random() > threshold and gs.step > 1:
             print 'uncharted'
             return gs.transformIndex(random.choice(uncharted_i)), player.mark
 

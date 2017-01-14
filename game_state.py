@@ -256,7 +256,8 @@ class GameState(object):
         if len(line[1:]) != size - 1:
             return None
         
-        i = {'Vertical': line[1]%size, 'Horizontal' : line[1]//size }[direction]
+        if direction in ['Vertical' , 'Horizontal']:
+            i = {'Vertical': line[1]%size, 'Horizontal' : line[1]//size }[direction]
         
         return  {'D-neg'     : [k for k in range(size -1, size**2, size-1)[:-1] if k not in line[1:]][0],
                  

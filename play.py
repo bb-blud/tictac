@@ -40,25 +40,25 @@ class LearningPlayer(Player):
         return
 
 def run():
-    # ##### Initialize #####
-    # cummulativeQ = QMap()
-    # gs = GameState(3)
-    # gs.setPlayers(LearningPlayer('X', gs, 'random'), LearningPlayer('O', gs, 'minimax' ) )
+    ##### Initialize #####
+    cummulativeQ = QMap()
+    gs = GameState(3)
+    gs.setPlayers(LearningPlayer('X', gs, 'reinforcement'), LearningPlayer('O', gs, 'ideal' ) )
 
-    # ##### Play Games #####
-    # n_games = 100
-    # for game in range(n_games):
-    #     gs.setQMap(cummulativeQ)     
-    #     while not gs.game_finished:
-    #         gs.takeStep()
-    #         print [k for k in gs.QMap.Q.keys() if len(k) == 1]
-    #     #     gs.printGame()
-    #     # gs.printGame()
-    #     print
-    #     for p in gs.players:
-    #         print p.mark, "is winner: ", p.is_winner
-    #     cummulativeQ = gs.getQMap()
-    #     gs.resetGame()
+    ##### Play Games #####
+    n_games = 100
+    for game in range(n_games):
+        gs.setQMap(cummulativeQ)     
+        while not gs.game_finished:
+            gs.takeStep()
+            #print [k for k in gs.QMap.Q.keys() if len(k) == 1]
+            gs.printGame()
+        gs.printGame()
+        print
+        for p in gs.players:
+            print p.mark, "is winner: ", p.is_winner
+        cummulativeQ = gs.getQMap()
+        gs.resetGame()
 
     # ##### Explore results #####
     # Q = cummulativeQ.getQ()
