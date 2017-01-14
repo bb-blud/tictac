@@ -243,11 +243,11 @@ class GameState(object):
                 return True
         else:
             x, y = self.getCoordinates(index)
-            u, v = self.getCoordinates(line[first_point])
-            slope = (1.*v - y)/(u - x)
-            if direction == 'D-pos' and slope == 1:
+#            u, v = self.getCoordinates(line[first_point])
+#            slope = 1.0*(v - y)/(u - x)
+            if direction == 'D-pos' and  x == y:
                 return True
-            if direction == 'D-neg' and slope == -1:
+            if direction == 'D-neg' and  x + y == self.size - 1:
                 return True
             return False
             
