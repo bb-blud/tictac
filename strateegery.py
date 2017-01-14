@@ -15,7 +15,7 @@ class Strateegery(object):
             if direction in ['D-pos', 'D-neg']:
                 keys = [0]
                 
-            viables = [coord for coord in keys if  lines[direction].get(coord, "Empty") not in ["Empty", None]]
+            viables = [coord for coord in keys if lines[direction].get(coord, "Empty") not in ["Empty", None]]
             
             for line in (lines[direction][coord] for coord in viables):
                 if line[0] == player.mark and len(line) - 1 == N: # first entry is a mark
@@ -194,11 +194,10 @@ class Strateegery(object):
 
                 for i in valid_indices:
                     test_seq = gs.game_sequence[:] + [(i, p.mark)]
-
+                    
                     forks = self.linesOfRankN(size - 1, test_seq, p)
 
                     if forks != [] and len(forks) >=2:
-
                         if strategy == 'block':
                             block_lines = self.linesOfRankN(size - 2, test_seq,  player)
 
@@ -208,8 +207,10 @@ class Strateegery(object):
                                     if gs.belongsToLine(index, b_line[0], b_line[1]):
                                         index_to_win = gs.indexToWin(b_line[0], b_line[1] + [index])
                                         block_fork_seq = test_seq + [(index, player.mark),(index_to_win, opponent.mark)]
-                                        
-                                        if len(self.linesOfRankN(size - 1, block_fork_seq, opponent)) < 2: # No forks any longer
+                                                            
+                                        if len(self.linesOfRankN(size, block_fork_seq, opponent)) < 1 and \
+                                        len(self.linesOfRankN(size - 1, block_fork_seq, opponent))< 2:    # No winning lines and no more forks
+                                            
                                             return index, player.mark
                                         
                         if strategy == 'gain':
