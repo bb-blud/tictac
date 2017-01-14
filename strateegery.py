@@ -1,4 +1,4 @@
-from random import randint
+import random
 
 class Strateegery(object):
     def __init__(self, game_state):
@@ -31,14 +31,59 @@ class Strateegery(object):
         valid = False
         move_index = None
         while not valid:
-            move_index = randint(0, size**2 - 1)
+            move_index = random.randint(0, size**2 - 1)
             valid = self.game_state.validMove(move_index, self.game_state.game_sequence)
             
-        return move_index, player.mark        
+        return move_index, player.mark
+    
+    ###########################################################
+    # Reinforcement learning
+    ###########################################################
+    def reinforcement(self, player, threshold = .3):
+        gs = self.game_state
+        Q = gs.QMap.Q
+        print gs.set_transform
+        
+        if Q == {} and gs.step == 1:
+            print "empty dict"
+            return random.choice([i for i in range(gs.size**2) if gs.validMove(i, gs.game_sequence)]), player.mark
+        
+        t_valids = [ gs.transformIndex(index) for index in range(gs.size**2) if gs.validMove(index, gs.game_sequence) ]
+        
+        strategies = { gs.players[0].mark : max, gs.players[1].mark : min }
+                
+        player_strategy = strategies[player.mark]
 
-    ##########################################################
+        charted = [ seq for seq in Q.keys() if len(seq) == gs.step]
+ 
+        uncharted_i = [ index for index in t_valids if index not in [ seq[-1][0] for seq in charted ] ]
+
+        # print 'game sequence: ',gs.game_sequence
+        # print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
+        # print 'valids', t_valids
+        # print
+        # print 'charted', [seq[-1][0] for seq in charted]
+        # print
+        # print 'uncharted', uncharted_i
+       
+        if uncharted_i and random.random() > threshold:
+            print 'uncharted'
+            return gs.transformIndex(random.choice(uncharted_i)), player.mark
+
+        index_and_val = { c : Q[c] for c in charted if c[-1][0] in t_valids}
+        
+        if index_and_val:
+            print 'optimize', player_strategy([1,9]), player.mark
+            player_optimal = player_strategy(index_and_val, key=Q.get)
+            return gs.transformIndex(player_optimal[-1][0]) , player.mark
+        
+        print 'just valid'        
+        return gs.transformIndex(random.choice(t_valids) ), player.mark
+            
+            
+    ###########################################################
     # MiniMax alpha-beta pruning and supporting functions
-    ##########################################################
+    ###########################################################
     def minimaxMeasure(self, sequence, player):
         gs = self.game_state
         size = self.game_state.size

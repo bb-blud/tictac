@@ -15,8 +15,8 @@ class QMap(object):
    
     def __init__(self):
         self.Q = {}
-        
-    def visitQ(self, sequence):        
+
+    def visitQ(self, sequence):
         if not self.Q.get(sequence, False):
             self.Q[sequence] = 0
 
@@ -26,13 +26,13 @@ class QMap(object):
             reward = 0
         else:
             reward = size**4 / len(game)
-
             winner = [p for p in players if p.is_winner][0]
             sgn = { players[0].mark : 1, players[1].mark : -1 }[winner.mark]
-        
-            for i in range(1, len(game)):
+            
+            for i in range(1, len(game) - 1):
                 sub_sequence = tuple(game[:i])
                 self.Q[sub_sequence] += sgn * reward
+            self.Q[tuple(game)] = sgn * reward * size**4
 
     def getQ(self):
         return self.Q
@@ -58,10 +58,10 @@ class GameState(object):
         self.current_player = self.players[0]
         
     def setQMap(self, Q):
-        self.Q = Q
+        self.QMap = Q
 
     def getQMap(self):
-        return self.Q
+        return self.QMap
     
     def validMove(self, index, sequence):
         if index not in ( m[0] for m in sequence):
@@ -79,9 +79,9 @@ class GameState(object):
 
         if self.validMove(index, self.game_sequence):
              self.game_sequence.append( (index, mark) )
-             self.Q.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
+             self.QMap.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
         else:
-            print "invalid move by {} at index {}".format( mark, index)
+            print "<----------------------invalid move by {} at index {}----------------------------->".format( mark, index)
             self.game_finished = True
             return
         
@@ -94,7 +94,7 @@ class GameState(object):
         # Update Q map
         if self.game_finished:
             t_game_sequence = [ (self.transformIndex(index) , mark ) for index, mark in self.game_sequence ]
-            self.Q.updateQ(t_game_sequence, self.players, self.size)
+            self.QMap.updateQ(t_game_sequence, self.players, self.size)
         #     for key in self.Q.getQ().keys():
         #         print key
             
@@ -167,13 +167,19 @@ class GameState(object):
 
         if x > midline:
             reflectX = lambda (x,y): (int(midline - (x - midline)), y)
+            x , y = reflectX( (x,y) )
             self.transform = compose(reflectX, self.transform)
+            
+            
         if y > midline:
             reflectY = lambda (x,y): (x, int(midline - (y - midline)) )
+            x , y = reflectY( (x,y) )
             self.transform = compose(reflectY, self.transform)
+            
         if y > x:
             reflectDiagonal = lambda (x,y): (y,x)
             self.transform = compose(reflectDiagonal, self.transform)
+
 
     def otherPlayer(self):
         return [p for p in self.players if p is not self.current_player][0]
@@ -306,7 +312,11 @@ class GameState(object):
 
             [5, 12, (12, 'X')], # Center point doesn't move
             
-            [4, 10, (10,'1'),(2,'2'),(3,'3'),(7,'4'),(11,'5')]] # Order is preserved
+            [4, 10, (10,'1'),(2,'2'),(3,'3'),(7,'4'),(11,'5')],  # Order is preserved
+
+            [3, 3, (3, 'X')],
+
+            [3, 7, (7, 'X')] ]  
 
         for i, test in enumerate(tests):
             self.resetGame()
