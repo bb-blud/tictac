@@ -70,13 +70,13 @@ def run():
     # Q = cummulativeQ.getQ()
     # M = max(len(seq) for seq in Q.keys())
 
-    QM = playGames(QMap(), GameState(3), ['random', 'random'], 70)
+    QM = playGames(QMap(), GameState(4), ['random', 'random'], 70)
 
-    QM = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
+    QM = playGames(QM, GameState(4), ['reinforcement', 'reinforcement'], 1000)
 
     Q = QM.getQ()
     M = max(len(seq) for seq in Q.keys())
-    for k in range(1,M):
+    for k in range(1,4):
         print "Explored Moves at step", k
         explored = (moves for moves in Q if len(moves) == k)
         for seq in explored:
