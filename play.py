@@ -41,37 +41,72 @@ class LearningPlayer(Player):
 
 
 def playGames(cummulativeQ, game_state, policies, n_games):
+    ####### Tally ########
+    tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
 
     ##### Initialize #####
     gs = game_state
     gs.setPlayers(LearningPlayer('X', gs, policies[0]), LearningPlayer('O', gs, policies[1] ) )
 
-    ##### Play Games #####
-    for game in range(n_games):
-        gs.setQMap(cummulativeQ)     
+
+    #### Crude convergence test ####
+    from collections import deque
+    
+    repeats = deque()
+    for game in range(5):
+        gs.setQMap(cummulativeQ)
+        
         while not gs.game_finished:
             gs.takeStep()
-            print policies
-            print [k for k in gs.QMap.Q.keys() if len(k) == 1] 
+            gs.printGame()
+        repeats.append(gs.game_sequence)
+        cummulativeQ = gs.getQMap()
+        gs.resetGame()
+
+    ######### Play Games #########
+    current = []
+    
+    for game in range(n_games):
+        gs.setQMap(cummulativeQ)
+        
+        while not gs.game_finished:
+            gs.takeStep()
             gs.printGame()
         gs.printGame()
         print
+        
+        cummulativeQ = gs.getQMap()
+        
+        tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
         for p in gs.players:
             print p.mark, "is winner: ", p.is_winner
-        cummulativeQ = gs.getQMap()
+        print tally
+        
+        ## Exit if converging ##
+        current = gs.game_sequence
+        repeats.append(gs.game_sequence)
+        repeats.popleft()
+        for r in repeats:
+            print r
+            print "**"
+        print
+        if False not in (current == g for g in repeats):
+            print "CONVERGENCE ON GAME NUMBER: ", game
+            break
+        ## ##              ## ##
+
         gs.resetGame()
         
     return cummulativeQ
 
 def run():
 
-    QM = playGames(QMap(), GameState(3), ['random', 'random'], 70)
+    QM = playGames(QMap(), GameState(3), ['minimax', 'ideal'], 70)
 
-    QM = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
+#    QM = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
 
     
-    # ##### Explore results #####
-    
+    ##### Explore Q #####
     Q = QM.getQ()
     M = max(len(seq) for seq in Q.keys())
     for k in range(1,M):
@@ -82,7 +117,7 @@ def run():
         print
 
 
-############# Tests ###################
+############## Tests ###################
     
     # # Debug game
     # cummulativeQ = QMap()    

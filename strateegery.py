@@ -44,10 +44,8 @@ class Strateegery(object):
         Q = gs.QMap.Q
 
         valid_indices= [ index for index in range(gs.size**2) if gs.validMove(index, gs.game_sequence) ]
-        
-        strategies = { gs.players[0].mark : max, gs.players[1].mark : min }
-                
-        player_strategy = strategies[player.mark]
+                                
+        player_strategy = { gs.players[0].mark : max, gs.players[1].mark : min } [player.mark]
 
         charted = [ seq for seq in Q.keys() if seq[:-1] == tuple(gs.game_sequence) ]
  
@@ -185,7 +183,7 @@ class Strateegery(object):
                     print "win/block", i, player.mark, strategy
                     return i, player.mark        
 
-        if gs.step >= 4*size - 9:  # Check Only check when game is sufficiently developed
+        if gs.step >= 4*size - 9:  # Check only when game is sufficiently developed
 
             # 2nd priority, Block opponent's fork or fork
             #

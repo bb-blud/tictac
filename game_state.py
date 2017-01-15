@@ -16,6 +16,7 @@ class QMap(object):
     def __init__(self):
         self.Q = {}
         self.gamma = .8
+        
     def visitQ(self, sequence):
         if not self.Q.get(sequence, False):
             self.Q[sequence] = 0
@@ -25,13 +26,14 @@ class QMap(object):
         if True not in (player.is_winner for player in players):
             reward = 0
         else:
-            reward = size**4 / len(game)
+            reward = 1.0 * size**4 / len(game)
             winner = [p for p in players if p.is_winner][0]
             sgn = { players[0].mark : 1, players[1].mark : -1 }[winner.mark]
             
             for i in range(1, len(game)):
                 sub_sequence = tuple(game[:i])
-                self.Q[sub_sequence] += sgn * reward * self.gamma**(i-1)
+                self.Q[sub_sequence] += sgn * + reward * self.gamma**(i-1) 
+
 
     def getQ(self):
         return self.Q
@@ -39,10 +41,11 @@ class QMap(object):
 class GameState(object):
     players = (None, None)
     current_player = None
-    def __init__(self, size=3):
+    def __init__(self, size=3, learning=True):
         # Game size
         self.size = abs(size)
-
+        self.learning = learning
+        
         # Initialize state variables
         self.game_finished = False
         self.step = 1
@@ -78,7 +81,8 @@ class GameState(object):
 
         if self.validMove(index, self.game_sequence):
              self.game_sequence.append( (index, mark) )
-             self.QMap.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
+             if self.learning:
+                 self.QMap.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
         else:
             print "<----------------------invalid move by {} at index {}----------------------------->".format( mark, index)
             self.game_finished = True
@@ -91,7 +95,7 @@ class GameState(object):
         self.game_finished = self.updateFinished()
 
         # Update Q map
-        if self.game_finished:
+        if self.game_finished and self.learning:
             t_game_sequence = [ (self.transformIndex(index) , mark ) for index, mark in self.game_sequence ]
             self.QMap.updateQ(t_game_sequence, self.players, self.size)
             
