@@ -18,8 +18,8 @@ class LearningPlayer(Player):
 
         # self.strategies.reinforcement(self)
         # print
-        print "RMOVE", move
-        print
+        # print "RMOVE", move
+        # print 
         return move
     
     ########## Player for debugging ##########
@@ -40,7 +40,7 @@ class LearningPlayer(Player):
         return
 
 
-def playGames(cummulativeQ, game_state, policies, n_games):
+def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
 
@@ -58,7 +58,8 @@ def playGames(cummulativeQ, game_state, policies, n_games):
         
         while not gs.game_finished:
             gs.takeStep()
-            gs.printGame()
+            if debug:
+                gs.printGame()
         repeats.append(gs.game_sequence)
         cummulativeQ = gs.getQMap()
         gs.resetGame()
@@ -71,41 +72,47 @@ def playGames(cummulativeQ, game_state, policies, n_games):
         
         while not gs.game_finished:
             gs.takeStep()
+            if debug:
+                gs.printGame()
+        if debug:
             gs.printGame()
-        gs.printGame()
-        print
+            print
         
         cummulativeQ = gs.getQMap()
-        
         tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
-        for p in gs.players:
-            print p.mark, "is winner: ", p.is_winner
-        print tally
+        
+        if debug:
+            for p in gs.players:
+                print p.mark, "is winner: ", p.is_winner
+            print tally
         
         ## Exit if converging ##
         current = gs.game_sequence
         repeats.append(gs.game_sequence)
         repeats.popleft()
-        for r in repeats:
-            print r
-            print "**"
-        print
+        
+        if debug:
+            for r in repeats:
+                print r
+                print "**"
+            print
+            
         if False not in (current == g for g in repeats):
-            print "CONVERGENCE ON GAME NUMBER: ", game
+            if debug:
+                print "CONVERGENCE ON GAME NUMBER: ", game
             break
         ## ##              ## ##
 
         gs.resetGame()
         
-    return cummulativeQ
+    return cummulativeQ, tally
 
 def run():
 
-    QM = playGames(QMap(), GameState(3), ['minimax', 'ideal'], 70)
+    QM, tally = playGames(QMap(), GameState(3), ['random', 'random'], 70)
 
-#    QM = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
+    QM, tally = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
 
-    
     ##### Explore Q #####
     Q = QM.getQ()
     M = max(len(seq) for seq in Q.keys())

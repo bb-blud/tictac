@@ -1,5 +1,7 @@
 import random
 
+debug = False
+
 class Strateegery(object):
     def __init__(self, game_state):
         self.game_state = game_state
@@ -52,29 +54,30 @@ class Strateegery(object):
         uncharted_i = [ index for index in valid_indices if index not in [ seq[-1][0] for seq in charted ] ]
 
         # # Debugging
-        # print 'game sequence: ',gs.game_sequence  
-        # print 'transform seq: ',t_sequence
-        # print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
-        # print 'valids', valid_indices
-        # print
-        # print 'charted', [seq[-1][0] for seq in charted]
-        # print
-        # print 'uncharted', uncharted_i
+        # if debug:
+        #     print 'game sequence: ',gs.game_sequence  
+        #     print 'transform seq: ',t_sequence
+        #     print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
+        #     print 'valids', valid_indices
+        #     print
+        #     print 'charted', [seq[-1][0] for seq in charted]
+        #     print
+        #     print 'uncharted', uncharted_i
        
         if uncharted_i and random.random() > threshold and gs.step > 1:
-            print 'uncharted'
+            #print 'uncharted'
             return random.choice(uncharted_i), player.mark
 
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
         
         if index_and_val:
-            print 'optimize', player_strategy([1,9]), player.mark
+            #print 'optimize', player_strategy([1,9]), player.mark
             player_optimal = player_strategy(index_and_val, key=Q.get)
             equivalents = [c for c in index_and_val if Q[c] == Q[player_optimal] ]
             move_seq = random.choice(equivalents)
             return move_seq[-1][0] , player.mark
         
-        print 'just valid'        
+        #print 'just valid'        
         return random.choice(valid_indices) , player.mark
             
             
@@ -180,7 +183,8 @@ class Strateegery(object):
 
                 full_line = self.linesOfRankN(size, test_seq, p)
                 if full_line != []:
-                    print "win/block", i, player.mark, strategy
+                    if debug:
+                        print "win/block", i, player.mark, strategy
                     return i, player.mark        
 
         if gs.step >= 4*size - 9:  # Check only when game is sufficiently developed
@@ -212,7 +216,8 @@ class Strateegery(object):
                                             return index, player.mark
                                         
                         if strategy == 'gain':
-                            print "fork", i, player.mark, strategy
+                            if debug:
+                                print "fork", i, player.mark, strategy
                             return i, player.mark
                             
         # Else measure the value of each possible next move
@@ -232,9 +237,11 @@ class Strateegery(object):
 
         # Return move of most measure or block the opponent's
         #
-        if index_measures['gain'][max_gain_index] >= index_measures['block'][max_block_index]:  
-            print "measure gain", max_gain_index, player.mark
+        if index_measures['gain'][max_gain_index] >= index_measures['block'][max_block_index]:
+            if debug:
+                print "measure gain", max_gain_index, player.mark
             return max_gain_index, player.mark
         else:
-            print "measure block", max_block_index, player.mark
+            if debug:
+                print "measure block", max_block_index, player.mark
             return max_block_index, player.mark
