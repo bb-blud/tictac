@@ -33,7 +33,6 @@ class QMap(object):
                 sub_sequence = tuple(game[:i])
                 self.Q[sub_sequence] += sgn * reward * self.gamma**(i-1)
 
-
     def getQ(self):
         return self.Q
 
@@ -95,8 +94,6 @@ class GameState(object):
         if self.game_finished:
             t_game_sequence = [ (self.transformIndex(index) , mark ) for index, mark in self.game_sequence ]
             self.QMap.updateQ(t_game_sequence, self.players, self.size)
-        #     for key in self.Q.getQ().keys():
-        #         print key
             
         # Set player to have next turn
         self.current_player = self.otherPlayer()
@@ -179,7 +176,6 @@ class GameState(object):
         if y > x:
             reflectDiagonal = lambda (x,y): (y,x)
             self.transform = compose(reflectDiagonal, self.transform)
-
 
     def otherPlayer(self):
         return [p for p in self.players if p is not self.current_player][0]

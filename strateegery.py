@@ -53,14 +53,15 @@ class Strateegery(object):
  
         uncharted_i = [ index for index in valid_indices if index not in [ seq[-1][0] for seq in charted ] ]
 
-        # print 'game sequence: ',gs.game_sequence
+        # # Debugging
+        # print 'game sequence: ',gs.game_sequence  
         # print 'transform seq: ',t_sequence
         # print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
-        print 'valids', valid_indices
-        print
-        print 'charted', [seq[-1][0] for seq in charted]
+        # print 'valids', valid_indices
         # print
-        print 'uncharted', uncharted_i
+        # print 'charted', [seq[-1][0] for seq in charted]
+        # print
+        # print 'uncharted', uncharted_i
        
         if uncharted_i and random.random() > threshold and gs.step > 1:
             print 'uncharted'
