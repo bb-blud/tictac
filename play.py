@@ -37,7 +37,7 @@ class LearningPlayer(Player):
         return
 
 
-def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=False,  Qtrain=False, debug=False):
+def playGames(cummulativeQ, game_state, policies, n_games, to_convergence=False, debug=False):
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
 
@@ -60,53 +60,58 @@ def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=Fal
         gs.resetGame()
 
     ######### Play Games #########
+    bads = set() # debug
+    
     current = []
-    bads = set()
-    for game in range(n_games):
-        gs.setQMap(cummulativeQ)
-        
-        while not gs.game_finished:
-            gs.takeStep()
+    converged = False
+    while not converged:                            # Default, avoid seeking convergence
+        converged = not to_convergence or converged # Change default behaviour to seek convergence (If-then logic)
+        for game in range(n_games):
+            gs.setQMap(cummulativeQ)
+
+            while not gs.game_finished:
+                gs.takeStep()
+                if debug:
+                    gs.printGame()
             if debug:
                 gs.printGame()
-        if debug:
-            gs.printGame()
-            print
-        
-        cummulativeQ = gs.QMap
-        tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
-        
-        if debug:
-            for p in gs.players:
-                print p.mark, "is winner: ", p.is_winner
-            print tally
-            
-        ## Exit if converging ##
-        current = gs.game_sequence
-        repeats.append(gs.game_sequence)
-        repeats.popleft()
-        
-        if debug:
-            for r in repeats:
-                print r
-                print "**"
-            print
-            
-        if False not in (current == g for g in repeats) and check_convergence:
-            tally[ (False, False) ] -= 4
-            if debug:
-                print "CONVERGENCE ON GAME NUMBER: ", game
-            break
-        ## ##              ## ##
-        
-        # if debug:
-        #     if gs.players[0].is_winner:
-        #         bads.add(tuple(gs.game_sequence))
+                print
 
-        gs.resetGame()
+            cummulativeQ = gs.QMap
+            tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
+
+            if debug:
+                for p in gs.players:
+                    print p.mark, "is winner: ", p.is_winner
+                print tally
+
+            ## Exit if converging ##
+            current = gs.game_sequence
+            repeats.append(gs.game_sequence)
+            repeats.popleft()
+
+            if debug:
+                for r in repeats:
+                    print r
+                    print "**"
+                print
+            
+            if False not in (current == g for g in repeats):
+                tally[ (False, False) ] -= 4
+                if True:
+                    print "CONVERGENCE ON GAME NUMBER: ", game
+                converged = True
+                break
+            ## ##  ## ##
+
+            # if debug:
+            #     if gs.players[0].is_winner:
+            #         bads.add(tuple(gs.game_sequence))
+
+            gs.resetGame()
         
-    # for b in bads:
-    #     print b
+        # for b in bads:
+        #     print b
     
     return cummulativeQ, tally
 
@@ -155,8 +160,11 @@ def printTally(q_map, game_state, playerX, playerO, n_games):
     print "{} : {} : {}".format(ts[0]/s, ts[2]/s, ts[1]/s)
         
 def run():
-    size = 3
-
+    size = 4
+    # start = time()
+    # QM, tally = playGames(QMap(), GameState(size, learning=True), ['Qlearning', 'Qlearning'], 100, to_convergence=True)
+    # print "Time elapsed: {} ".format(time() - start)
+    # print tally
 
     ######################
     # Minimax rough stats
@@ -179,36 +187,37 @@ def run():
 
     # print
     
-    ######################
-    # Ideal rough stats
-    print "Ideal rough stats {}x{}".format(size,size)
-    print "Perfect X player: win/draw/loss ratio 91:3:0"
-    print "Perfect Normalized:"
-    print "0.9681 : 0.0319 : 0"
-    print "Ideal vs Random"
-    start = time()
-    printTally(QMap(), GameState(size), 'ideal', 'random', 1000)
-    print "Time elapsed: {} ".format(time() - start)
-    print
-    print "Perfect O player loss/draw/win ratio 0:3:44"
-    print "Perfect Normalized:"
-    print "0 : 0.0638 : 0.9363"
-    print "Random vs Ideal"
-    start = time()
-    printTally(QMap(), GameState(size), 'random', 'ideal', 1000)
-    print "Time elapsed: {} ".format(time() - start)
+    # ######################
+    # # Ideal rough stats
+    # print "Ideal rough stats {}x{}".format(size,size)
+    # print "Perfect X player: win/draw/loss ratio 91:3:0"
+    # print "Perfect Normalized:"
+    # print "0.9681 : 0.0319 : 0"
+    # print "Ideal vs Random"
+    # start = time()
+    # printTally(QMap(), GameState(size), 'ideal', 'random', 1000)
+    # print "Time elapsed: {} ".format(time() - start)
+    # print
+    # print "Perfect O player loss/draw/win ratio 0:3:44"
+    # print "Perfect Normalized:"
+    # print "0 : 0.0638 : 0.9363"
+    # print "Random vs Ideal"
+    # start = time()
+    # printTally(QMap(), GameState(size), 'random', 'ideal', 1000)
+    # print "Time elapsed: {} ".format(time() - start)
 
-    print
+    # print
     
-    ######################
-    # Random rough stats
-    print "Random rough stats {}x{}".format(size,size)
-    print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
-    print "Normalized:"
-    print "0.6594 : 0.31884 : 0.0217"
-    print "Random vs Random"
+    # ######################
+    # # Random rough stats
+    # print "Random rough stats {}x{}".format(size,size)
+    # print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
+    # print "Normalized:"
+    # print "0.6594 : 0.31884 : 0.0217"
+   
+    print "Random vs Random\nBoard {}x{}".format(size,size)
     start = time()
-    printTally(QMap(),GameState(size), 'random', 'random', 1000)
+    printTally(QMap(),GameState(size), 'random', 'random', 100)
     print "Time elapsed: {} ".format(time() - start)
     print
 
@@ -216,40 +225,45 @@ def run():
 
     ############################
     # Q-Learning rough stats
-    # Seed Q with initial random games
-    QM, tally = playGames(QMap(), GameState(size, learning=True), ['random', 'random'], 70)
-    # player 2 learning against a random player 1
-    QM, tally = playGames(QM, GameState(size, learning=True), ['random', 'Qlearning'], 1000, check_convergence=True)
-    # Now player 1 learning against a random player 2
-    QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'random'], 1000, check_convergence=True)
-    # Have two agents learn against each other
-    QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 1000, check_convergence=True)
     
     # # Seed Q with initial random games
-    # start = time()
-    # QM = trainQ(QMap(), GameState(size, learning=True), ['random', 'random'], runs=7, batch_size=10)
+    # QM, tally = playGames(QMap(), GameState(size, learning=True), ['random', 'random'], 70)
     # # player 2 learning against a random player 1
-    # QM = trainQ(QM, GameState(size, learning=True), ['random', 'Qlearning'], runs=10, batch_size=100)
+    # QM, tally = playGames(QM, GameState(size, learning=True), ['random', 'Qlearning'], 1000, to_convergence=False)
     # # Now player 1 learning against a random player 2
-    # QM = trainQ(QM, GameState(size, learning=True), ['Qlearning', 'random'], runs=10, batch_size=100)
-    # # Have two agents learn against each other
-    # QM = trainQ(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], runs=10, batch_size=100)
-    # print time() - start
-    
-    print "Q-Learning rough stats {}x{}".format(size,size)
-    print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
-    print "Normalized:"
-    print "0.6594 : 0.31884 : 0.0217"
-    print "Qlearning vs random"
-    printTally(QM, GameState(size), 'random', 'random', 1000)
-    print
+    # QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'random'], 1000, to_convergence=False)
+    # Have two agents learn against each other
+    # QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'])
 
-    print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
-    print "Normalized:"
-    print "0.6594 : 0.31884 : 0.0217"
-    print "random vs Qlearning"
-    printTally(QM, GameState(size), 'random', 'random', 1000)
-    print
+
+    # Seed Q with initial random games
+    start = time()
+    QM = trainQ(QMap(), GameState(size, learning=True), ['random', 'random'], runs=7, batch_size=100)
+    # player 2 learning against a random player 1
+    QM = trainQ(QM, GameState(size, learning=True), ['random', 'Qlearning'], runs=10, batch_size=100)
+    # Now player 1 learning against a random player 2
+    QM = trainQ(QM, GameState(size, learning=True), ['Qlearning', 'random'], runs=10, batch_size=100)
+    # Have two agents learn against each other
+    # QM = trainQ(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], runs=10, batch_size=300)
+    print time() - start
+    print "seeking converge"
+    QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 100,to_convergence=True)
+    print time() - start
+    
+    # print "Q-Learning rough stats {}x{}".format(size,size)
+    # print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
+    # print "Normalized:"
+    # print "0.6594 : 0.31884 : 0.0217"
+    # print "Qlearning vs random\nBoard {}x{}".format(size,size)
+    # printTally(QM, GameState(size), 'random', 'random', 1000)
+    # print
+
+    # print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
+    # print "Normalized:"
+    # print "0.6594 : 0.31884 : 0.0217"
+    # print "random vs Qlearning\nBoard {}x{}".format(size,size)
+    # printTally(QM, GameState(size), 'random', 'random', 1000)
+    # print
     
     QM, tally = playGames(QM, GameState(size), ['Qlearning', 'ideal'], 30)
     print tally
@@ -271,8 +285,8 @@ def run():
     #     print
 
     ####### Store/Load QMap #########
-    import pickle
-    # with open("./lucky_3x3_Q.pickle", 'wb') as f:
+    # import pickle
+    # with open("./lucky_4x4_Q.pickle", 'wb') as f:
     #     pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
     # with open("./lucky_3x3_Q.pickle", 'rb') as f:
     #     QM = pickle.load(f)

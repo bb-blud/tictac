@@ -1,2 +1,3 @@
 # Ignore python binary files
 *.pyc
+*.pickle
