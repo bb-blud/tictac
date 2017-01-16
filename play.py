@@ -1,3 +1,4 @@
+from time import time
 from game_board import GameBoard
 from game_state import Player, GameState, QMap
 from strateegery import Strateegery
@@ -48,7 +49,6 @@ def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
     gs = game_state
     gs.setPlayers(LearningPlayer('X', gs, policies[0]), LearningPlayer('O', gs, policies[1] ) )
 
-
     #### Crude convergence test ####
     from collections import deque
     
@@ -66,7 +66,7 @@ def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
 
     ######### Play Games #########
     current = []
-    
+    bads = set()
     for game in range(n_games):
         gs.setQMap(cummulativeQ)
         
@@ -85,7 +85,8 @@ def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
             for p in gs.players:
                 print p.mark, "is winner: ", p.is_winner
             print tally
-        
+            
+            
         ## Exit if converging ##
         current = gs.game_sequence
         repeats.append(gs.game_sequence)
@@ -98,30 +99,72 @@ def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
             print
             
         if False not in (current == g for g in repeats):
+            tally[ (False, False) ] -= 4
             if debug:
                 print "CONVERGENCE ON GAME NUMBER: ", game
             break
         ## ##              ## ##
+        if gs.players[0].is_winner:
+            bads.add(tuple(gs.game_sequence))
 
         gs.resetGame()
-        
+    for b in bads:
+        print b
     return cummulativeQ, tally
+
+def printTally(game_state, playerX, playerO, n_games):
+    
+    QM, tally = playGames(QMap(), game_state, [playerX, playerO], n_games)
+    
+    ts = [1.*tally[(True, False)], 1.*tally[(False, True)], 1.*tally[(False,False)]]
+    s = sum(ts)
+    print "{} : {} : {}".format(ts[0]/s, ts[2]/s, ts[1]/s)    
 
 def run():
 
-    QM, tally = playGames(QMap(), GameState(3), ['random', 'random'], 70)
+    QM, tally = playGames(QMap(), GameState(3), ['random', 'ideal'], 1000)
+    print tally
+    
+    # print "3x3"
+    # print "Perfect X player win/draw/loss ratio 91:3:0 or 0.9681:0.0319:0"
+    # print "Minimax vs Random"
+    # start = time()
+    # printTally(GameState(3), 'minimax', 'random', 500)
+    # print "Time elapsed: {} ".format(time() - start)
+    # print
+    # print "Perfect O player win/draw/loss ratio 44:3:0 or 0.9363:0.0638:0"
+    # print "Random vs Minimax"
+    # start = time()
+    # printTally(GameState(3), 'random', 'minimax',500)
+    # print "Time elapsed: {} ".format(time() - start)
 
-    QM, tally = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
+    # print "3x3"
+    # print "Perfect X player win/draw/loss ratio 91:3:0 or 0.9681:0.0319:0"
+    # print "Ideal vs Random"
+    # start = time()
+    # printTally(GameState(3), 'ideal', 'random', 1000)
+    # print "Time elapsed: {} ".format(time() - start)
+    # print
+    # print "Perfect O player draw/win/loss ratio 3:44:0 or 0.0638:0.9363:0"
+    # print "Random vs Ideal"
+    # start = time()
+    # printTally(GameState(3), 'random', 'ideal', 1000)
+    # print "Time elapsed: {} ".format(time() - start)
+    
+    # QM, tally = playGames(QMap(), GameState(3), ['random', 'random'], 70)
+
+    # QM, tally = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
+    # print "TicTacToe X win/loss/draw ratio: 91: 44 : 3 or 0.6594 : 0.31884 : 0.0217"
 
     ##### Explore Q #####
-    Q = QM.getQ()
-    M = max(len(seq) for seq in Q.keys())
-    for k in range(1,M):
-        print "Explored Moves at step", k
-        explored = (moves for moves in Q if len(moves) == k)
-        for seq in explored:
-            print seq, Q[seq]
-        print
+    # Q = QM.getQ()
+    # M = max(len(seq) for seq in Q.keys())
+    # for k in range(1,M):
+    #     print "Explored Moves at step", k
+    #     explored = (moves for moves in Q if len(moves) == k)
+    #     for seq in explored:
+    #         print seq, Q[seq]
+    #     print
 
 
 ############## Tests ###################
@@ -141,13 +184,14 @@ def run():
     # problem_sequence = [(4, 'X'), (0, 'O'), (8, 'X')] # Division by 0 error in indexInLine, diagonal fork
     # problem_sequence = [(0, 'X'), (1, 'O'), (7, 'X'), (3, 'O'), (5, 'X')] # Division by 0 error belongsToLine    
     # problem_sequence = [(1, 'X'), (4, 'O'), (8, 'X'), (5, 'O'), (3, 'X'), (2, 'O'), (6, 'X'), (0, 'O'), (7, 'X')] # fork logic fail
-    
+    # problem_sequence = [(7, 'X'), (4, 'O'), (3, 'X'), (2, 'O'), (6, 'X'), (0, 'O'), (8, 'X')]
     # gs.players[0].setDebug(problem_sequence)
 
     # while not gs.game_finished:
     #     gs.takeStep()
     #     gs.printGame()
-    # ################
+    # gs.printGame()
+    ################
 
     
     # problem_sequence = [(4, 'X'), (0, 'O'), (8, 'X')] # Division by 0 error in indexInLine, diagonal fork

@@ -193,17 +193,16 @@ class Strateegery(object):
             #
             for strategy in ['gain', 'block']:
                 p = {'block' : opponent, 'gain' : player}[strategy]
-
+                
                 for i in valid_indices:
                     test_seq = gs.game_sequence[:] + [(i, p.mark)]
-                    
                     forks = self.linesOfRankN(size - 1, test_seq, p)
 
                     if forks != [] and len(forks) >=2:
                         if strategy == 'block':
-                            block_lines = self.linesOfRankN(size - 2, test_seq,  player)
-
-                            for index in (k for k in valid_indices if k is not i):
+                            block_lines = self.linesOfRankN(size - 2, gs.game_sequence,  player)
+                            
+                            for index in valid_indices:
                                 for b_line in block_lines:
                                     
                                     if gs.belongsToLine(index, b_line[0], b_line[1]):
@@ -214,7 +213,6 @@ class Strateegery(object):
                                         len(self.linesOfRankN(size - 1, block_fork_seq, opponent))< 2:    # No winning lines and no more forks
                                             
                                             return index, player.mark
-                                        
                         if strategy == 'gain':
                             if debug:
                                 print "fork", i, player.mark, strategy
