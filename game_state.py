@@ -41,7 +41,7 @@ class QMap(object):
 class GameState(object):
     players = (None, None)
     current_player = None
-    def __init__(self, size=3, learning=True):
+    def __init__(self, size=3, learning=False):
         # Game size
         self.size = abs(size)
         self.learning = learning

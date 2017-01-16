@@ -1,6 +1,8 @@
 import random
 
 debug = False
+seed = 01152017
+random.seed(seed)
 
 class Strateegery(object):
     def __init__(self, game_state):
@@ -32,53 +34,48 @@ class Strateegery(object):
         size = self.game_state.size
         valid = False
         move_index = None
-        while not valid:
+        while not valid: # Take take random index until it is valid
             move_index = random.randint(0, size**2 - 1)
             valid = self.game_state.validMove(move_index, self.game_state.game_sequence)
             
         return move_index, player.mark
     
     ###########################################################
-    # Reinforcement learning
+    # Q-Learning learning
     ###########################################################
-    def reinforcement(self, player, threshold = .3):
+    def Qlearning(self, player, threshold = .3):
         gs = self.game_state
         Q = gs.QMap.Q
 
+        # All indices that are legal next moves
         valid_indices= [ index for index in range(gs.size**2) if gs.validMove(index, gs.game_sequence) ]
-                                
+        
+        # Player 1 will choose to maximize, Player 2 will minimize
         player_strategy = { gs.players[0].mark : max, gs.players[1].mark : min } [player.mark]
-
+        
+        # Visited sequences in Q that match the current game up until their last move (i.e. possible futures after current state)
         charted = [ seq for seq in Q.keys() if seq[:-1] == tuple(gs.game_sequence) ]
- 
+        
+        # Legal moves that lead to sequences not in Q yet
         uncharted_i = [ index for index in valid_indices if index not in [ seq[-1][0] for seq in charted ] ]
 
-        # # Debugging
-        # if debug:
-        #     print 'game sequence: ',gs.game_sequence  
-        #     print 'transform seq: ',t_sequence
-        #     print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
-        #     print 'valids', valid_indices
-        #     print
-        #     print 'charted', [seq[-1][0] for seq in charted]
-        #     print
-        #     print 'uncharted', uncharted_i
        
-        if uncharted_i and random.random() > threshold and gs.step > 1:
+        if uncharted_i and random.random() > threshold and gs.step > 1: # If a move hasn't been done try it, randomly
             #print 'uncharted'
             return random.choice(uncharted_i), player.mark
 
+        # Q values of the future sequences that could be legally taken
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
         
         if index_and_val:
-            #print 'optimize', player_strategy([1,9]), player.mark
+            #print 'optimize', player_strategy([1,9]), player.mark #debug
             player_optimal = player_strategy(index_and_val, key=Q.get)
-            equivalents = [c for c in index_and_val if Q[c] == Q[player_optimal] ]
+            equivalents = [c for c in index_and_val if Q[c] == Q[player_optimal] ] # There might be more that one sequence that is optimal
             move_seq = random.choice(equivalents)
             return move_seq[-1][0] , player.mark
         
-        #print 'just valid'        
-        return random.choice(valid_indices) , player.mark
+        #print 'just valid' #debug
+        return random.choice(valid_indices) , player.mark # simply return a legal move in any other case
             
             
     ###########################################################
@@ -106,7 +103,7 @@ class Strateegery(object):
         gs = self.game_state        
         if gs.isTie(sequence):
             return True
-        if len(self.linesOfRankN(gs.size, sequence, player)) > 0:
+        if len(self.linesOfRankN(gs.size, sequence, player)) > 0:  # Winning line game over
             return True
         
     def minimax(self, sequence, depth, Min, Max, player):
@@ -152,7 +149,7 @@ class Strateegery(object):
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
-            mm = self.minimax(gs.game_sequence[:] + [move], 10, -size*2, size*2, opponent)
+            mm = self.minimax(gs.game_sequence[:] + [move], 2, -size*2, size*2, opponent)
             moves.append((mm, move))
 
         return optimal(moves)[1]
@@ -243,3 +240,20 @@ class Strateegery(object):
             if debug:
                 print "measure block", max_block_index, player.mark
             return max_block_index, player.mark
+
+
+
+
+
+
+        
+# # Debugging
+# if debug:
+#     print 'game sequence: ',gs.game_sequence  
+#     print 'transform seq: ',t_sequence
+#     print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
+#     print 'valids', valid_indices
+#     print
+#     print 'charted', [seq[-1][0] for seq in charted]
+#     print
+#     print 'uncharted', uncharted_i

@@ -14,13 +14,9 @@ class LearningPlayer(Player):
             'random'   : self.strategies.randomMove,
             'minimax'  : self.strategies.minimaxMove,
             'ideal'    : self.strategies.ideal,
-            'reinforcement': self.strategies.reinforcement,
+            'Qlearning': self.strategies.Qlearning,
             'debug'    : self.debug}[self.policy](self)
 
-        # self.strategies.reinforcement(self)
-        # print
-        # print "RMOVE", move
-        # print 
         return move
     
     ########## Player for debugging ##########
@@ -41,7 +37,7 @@ class LearningPlayer(Player):
         return
 
 
-def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=False, debug = False):
+def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=False,  Qtrain=False, debug=False):
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
 
@@ -55,13 +51,12 @@ def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=Fal
     repeats = deque()
     for game in range(5):
         gs.setQMap(cummulativeQ)
-        
         while not gs.game_finished:
             gs.takeStep()
             if debug:
                 gs.printGame()
         repeats.append(gs.game_sequence)
-        cummulativeQ = gs.getQMap()
+        cummulativeQ = gs.QMap
         gs.resetGame()
 
     ######### Play Games #########
@@ -78,14 +73,13 @@ def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=Fal
             gs.printGame()
             print
         
-        cummulativeQ = gs.getQMap()
+        cummulativeQ = gs.QMap
         tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
         
         if debug:
             for p in gs.players:
                 print p.mark, "is winner: ", p.is_winner
             print tally
-            
             
         ## Exit if converging ##
         current = gs.game_sequence
@@ -104,60 +98,155 @@ def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=Fal
                 print "CONVERGENCE ON GAME NUMBER: ", game
             break
         ## ##              ## ##
-        if gs.players[0].is_winner:
-            bads.add(tuple(gs.game_sequence))
+        
+        # if debug:
+        #     if gs.players[0].is_winner:
+        #         bads.add(tuple(gs.game_sequence))
 
         gs.resetGame()
-    for b in bads:
-        print b
+        
+    # for b in bads:
+    #     print b
+    
     return cummulativeQ, tally
 
-def printTally(game_state, playerX, playerO, n_games):
+
     
-    QM, tally = playGames(QMap(), game_state, [playerX, playerO], n_games)
+def Qtrain(ns, game_state, policies, n_games):
+    ##### Initialize #####
+    gs = game_state
+    gs.setPlayers(LearningPlayer('X', gs, policies[0]), LearningPlayer('O', gs, policies[1] ) )
+
+    for game in range(n_games):
+        gs.setQMap(ns.QM)
+
+        while not gs.game_finished:
+            gs.takeStep()
+            if debug:
+                gs.printGame()
+        repeats.append(gs.game_sequence)
+        ns.QM = gs.QMap
+        gs.resetGame()
+
+
+def printTally(q_map, game_state, playerX, playerO, n_games):
+    
+    QM, tally = playGames(q_map, game_state, [playerX, playerO], n_games)
     
     ts = [1.*tally[(True, False)], 1.*tally[(False, True)], 1.*tally[(False,False)]]
-    s = sum(ts)
-    print "{} : {} : {}".format(ts[0]/s, ts[2]/s, ts[1]/s)    
-
-def run():
-
-    QM, tally = playGames(QMap(), GameState(3), ['minimax', 'ideal'], 1, debug=True)
-    print tally
     
-    # print "3x3"
-    # print "Perfect X player win/draw/loss ratio 91:3:0 or 0.9681:0.0319:0"
+    s = sum(ts)
+    print "{} : {} : {}".format(ts[0]/s, ts[2]/s, ts[1]/s)
+        
+def run():
+    size = 3
+    # QM, tally = playGames(QMap(), GameState(size), ['minimax', 'ideal'], 1, debug=True)
+    # print tally
+
+    ######################
+    # Minimax rough stats
+    # print "Minimax rough stats {}x{}".format(size,size)
+    # print "Perfect X player win/draw/loss ratio 91:3:0"
+    # print "Perfect Normalized" 
+    # print "0.9681 : 0.0319 : 0"
     # print "Minimax vs Random"
     # start = time()
-    # printTally(GameState(3), 'minimax', 'random', 500)
+    # printTally(QMap(), GameState(size), 'minimax', 'random', 500)
     # print "Time elapsed: {} ".format(time() - start)
     # print
-    # print "Perfect O player loss/draw/win ratio 0:3:44 or 0:0.0638:0.9363"    
+    # print "Perfect O player loss/draw/win ratio 0:3:44"
+    # print "Perfect Normalized"
+    # print  "0 : 0.0638 : 0.9363"
     # print "Random vs Minimax"
     # start = time()
-    # printTally(GameState(3), 'random', 'minimax',500)
+    # printTally(QMap(),GameState(size), 'random', 'minimax',500)
     # print "Time elapsed: {} ".format(time() - start)
 
     # print
     
-    # print "3x3"
-    # print "Perfect X player win/draw/loss ratio 91:3:0 or 0.9681:0.0319:0"
-    # print "Ideal vs Random"
-    # start = time()
-    # printTally(GameState(3), 'ideal', 'random', 500)
-    # print "Time elapsed: {} ".format(time() - start)
-    # print
-    # print "Perfect O player loss/draw/win ratio 0:3:44 or 0:0.0638:0.9363"
-    # print "Random vs Ideal"
-    # start = time()
-    # printTally(GameState(3), 'random', 'ideal', 500)
-    # print "Time elapsed: {} ".format(time() - start)
+    ######################
+    # Ideal rough stats
+    print "Ideal rough stats {}x{}".format(size,size)
+    print "Perfect X player: win/draw/loss ratio 91:3:0"
+    print "Perfect Normalized:"
+    print "0.9681 : 0.0319 : 0"
+    print "Ideal vs Random"
+    start = time()
+    printTally(QMap(), GameState(size), 'ideal', 'random', 1000)
+    print "Time elapsed: {} ".format(time() - start)
+    print
+    print "Perfect O player loss/draw/win ratio 0:3:44"
+    print "Perfect Normalized:"
+    print "0 : 0.0638 : 0.9363"
+    print "Random vs Ideal"
+    start = time()
+    printTally(QMap(), GameState(size), 'random', 'ideal', 1000)
+    print "Time elapsed: {} ".format(time() - start)
+
+    print
     
-    # QM, tally = playGames(QMap(), GameState(3), ['random', 'random'], 70)
+    ######################
+    # Random rough stats
+    print "Random rough stats {}x{}".format(size,size)
+    print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
+    print "Normalized:"
+    print "0.6594 : 0.31884 : 0.0217"
+    print "Random vs Random"
+    start = time()
+    printTally(QMap(),GameState(size), 'random', 'random', 1000)
+    print "Time elapsed: {} ".format(time() - start)
+    print
 
-    # QM, tally = playGames(QM, GameState(3), ['reinforcement', 'reinforcement'], 1000)
-    # print "TicTacToe X win/loss/draw ratio: 91: 44 : 3 or 0.6594 : 0.31884 : 0.0217"
+    print
+    
+    ############################
+    # Q-Learning rough stats
+    import multiprocessing
+    print "Q-Learning rough stats {}x{}".format(size,size)
+    
+    # Seed Q with initial random games
+    # manager = multiprocessing.Manager()
+    # ns = manager.Namespace()
+    # ns.QM = QMap()
+    # p = multiprocessing.Process(target=playGames, args=(ns, GameState(size, learning=True), ['random', 'random'], 10))
+    # p.start()
+    # p.join()
+    # print ns.QM.Q
+                                
+    QM, tally = playGames(QMap(), GameState(size, learning=True), ['random', 'random'], 70)
+    
+    # player 2 learning against a random player 1
+    QM, tally = playGames(QM, GameState(size, learning=True), ['random', 'Qlearning'], 1000, check_convergence=True)
+    # Now player 1 learning against a random player 2
+    QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'random'], 1000, check_convergence=True)
+    # Have two agents learn against each other
+    QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 1000, check_convergence=True)
 
+    print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
+    print "Normalized:"
+    print "0.6594 : 0.31884 : 0.0217"
+    print "Qlearning vs random"
+    printTally(QM, GameState(size), 'random', 'random', 1000)
+    print
+
+    print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
+    print "Normalized:"
+    print "0.6594 : 0.31884 : 0.0217"
+    print "random vs Qlearning"
+    printTally(QM, GameState(size), 'random', 'random', 1000)
+    print
+    
+    QM, tally = playGames(QM, GameState(size), ['Qlearning', 'ideal'], 30)
+    print tally
+
+    QM, tally = playGames(QM, GameState(size), ['Qlearning', 'minimax'], 30)
+    print tally
+
+    QM, tally = playGames(QM, GameState(size), ['Qlearning', 'Qlearning'], 30)
+    print tally
+
+    ####### Store QMap #########
+    
     ##### Explore Q #####
     # Q = QM.getQ()
     # M = max(len(seq) for seq in Q.keys())
@@ -250,7 +339,7 @@ if __name__ == '__main__':
     # ##### Initialize #####
     # cummulativeQ = QMap()
     # gs = GameState(3)
-    # gs.setPlayers(LearningPlayer('X', gs, 'reinforcement'), LearningPlayer('O', gs, 'reinforcement' ) )
+    # gs.setPlayers(LearningPlayer('X', gs, 'Qlearning'), LearningPlayer('O', gs, 'Qlearning' ) )
 
     # ##### Play Games #####
     # n_games = 20
