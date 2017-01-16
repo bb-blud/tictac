@@ -286,9 +286,9 @@ def run():
 
     ####### Store/Load QMap #########
     # import pickle
-    # with open("./lucky_4x4_Q.pickle", 'wb') as f:
+    # with open("../lucky_4x4_Q.pickle", 'wb') as f:
     #     pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
-    # with open("./lucky_3x3_Q.pickle", 'rb') as f:
+    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
     #     QM = pickle.load(f)
         
 
