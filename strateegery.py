@@ -152,7 +152,7 @@ class Strateegery(object):
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
-            mm = self.minimax(gs.game_sequence[:] + [move], 2, -size*2, size*2, opponent)
+            mm = self.minimax(gs.game_sequence[:] + [move], 10, -size*2, size*2, opponent)
             moves.append((mm, move))
 
         return optimal(moves)[1]

@@ -41,7 +41,7 @@ class LearningPlayer(Player):
         return
 
 
-def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
+def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=False, debug = False):
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
 
@@ -98,7 +98,7 @@ def playGames(cummulativeQ, game_state, policies, n_games, debug = False):
                 print "**"
             print
             
-        if False not in (current == g for g in repeats):
+        if False not in (current == g for g in repeats) and check_convergence:
             tally[ (False, False) ] -= 4
             if debug:
                 print "CONVERGENCE ON GAME NUMBER: ", game
@@ -122,7 +122,7 @@ def printTally(game_state, playerX, playerO, n_games):
 
 def run():
 
-    QM, tally = playGames(QMap(), GameState(3), ['random', 'ideal'], 1000)
+    QM, tally = playGames(QMap(), GameState(3), ['minimax', 'ideal'], 1, debug=True)
     print tally
     
     # print "3x3"
@@ -132,23 +132,25 @@ def run():
     # printTally(GameState(3), 'minimax', 'random', 500)
     # print "Time elapsed: {} ".format(time() - start)
     # print
-    # print "Perfect O player win/draw/loss ratio 44:3:0 or 0.9363:0.0638:0"
+    # print "Perfect O player loss/draw/win ratio 0:3:44 or 0:0.0638:0.9363"    
     # print "Random vs Minimax"
     # start = time()
     # printTally(GameState(3), 'random', 'minimax',500)
     # print "Time elapsed: {} ".format(time() - start)
 
+    # print
+    
     # print "3x3"
     # print "Perfect X player win/draw/loss ratio 91:3:0 or 0.9681:0.0319:0"
     # print "Ideal vs Random"
     # start = time()
-    # printTally(GameState(3), 'ideal', 'random', 1000)
+    # printTally(GameState(3), 'ideal', 'random', 500)
     # print "Time elapsed: {} ".format(time() - start)
     # print
-    # print "Perfect O player draw/win/loss ratio 3:44:0 or 0.0638:0.9363:0"
+    # print "Perfect O player loss/draw/win ratio 0:3:44 or 0:0.0638:0.9363"
     # print "Random vs Ideal"
     # start = time()
-    # printTally(GameState(3), 'random', 'ideal', 1000)
+    # printTally(GameState(3), 'random', 'ideal', 500)
     # print "Time elapsed: {} ".format(time() - start)
     
     # QM, tally = playGames(QMap(), GameState(3), ['random', 'random'], 70)
@@ -173,7 +175,7 @@ def run():
     # cummulativeQ = QMap()    
     # gs = GameState(3)
     # gs.setQMap(QMap())
-    # gs.setPlayers(LearningPlayer('X', gs, 'debug'), LearningPlayer('O', gs, 'ideal'))
+    # gs.setPlayers(LearningPlayer('X', gs, 'debug'), LearningPlayer('O', gs, 'minimax')) 
     # problem_sequence =  [(1,'X'), (6, 'O'), (7,'X'), (4, 'O'), (8,'X'), (2, 'O'), (3, 'X'), (5, 'O'), (0, 'X')]   # problems with diag
     # problem_sequence = [(0,'X'),(7,'O'),(3,'X'),(6,'O'),(4,'X'),(8,'O'),(2,'X'),(1,'O'),(5,'X')] # problems horizontal tally
     # problem_sequence = [(4, 'X'), (0,'O'), (1,'X'), (6, 'O'), (3, 'X'), (5, 'O'), (7, 'X')]  # Optimize fail (X-random, O-minimize)
@@ -184,7 +186,8 @@ def run():
     # problem_sequence = [(4, 'X'), (0, 'O'), (8, 'X')] # Division by 0 error in indexInLine, diagonal fork
     # problem_sequence = [(0, 'X'), (1, 'O'), (7, 'X'), (3, 'O'), (5, 'X')] # Division by 0 error belongsToLine    
     # problem_sequence = [(1, 'X'), (4, 'O'), (8, 'X'), (5, 'O'), (3, 'X'), (2, 'O'), (6, 'X'), (0, 'O'), (7, 'X')] # fork logic fail
-    # problem_sequence = [(7, 'X'), (4, 'O'), (3, 'X'), (2, 'O'), (6, 'X'), (0, 'O'), (8, 'X')]
+    # problem_sequence = [(7, 'X'), (4, 'O'), (3, 'X'), (2, 'O'), (6, 'X'), (0, 'O'), (8, 'X')] # fork fail
+    # problem_sequence = [(0, 'X'), (4, 'O'), (5, 'X'), (6, 'O'), (2, 'X'), (1, 'O'), (8, 'X')] # minimax fail to see fork
     # gs.players[0].setDebug(problem_sequence)
 
     # while not gs.game_finished:
