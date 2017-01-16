@@ -112,21 +112,37 @@ def playGames(cummulativeQ, game_state, policies, n_games, check_convergence=Fal
 
 
     
-def Qtrain(ns, game_state, policies, n_games):
-    ##### Initialize #####
-    gs = game_state
-    gs.setPlayers(LearningPlayer('X', gs, policies[0]), LearningPlayer('O', gs, policies[1] ) )
+def trainQ(QM, game_state, policies, runs, batch_size):
 
-    for game in range(n_games):
-        gs.setQMap(ns.QM)
+    ## Support function plays batch_size amount of games ##
+    def playBatch(ns, game_state, policies, batch_size):
+        gs = game_state
+        gs.setPlayers(LearningPlayer('X', gs, policies[0]), LearningPlayer('O', gs, policies[1]) )
 
-        while not gs.game_finished:
-            gs.takeStep()
-            if debug:
-                gs.printGame()
-        repeats.append(gs.game_sequence)
-        ns.QM = gs.QMap
-        gs.resetGame()
+        for game in range(batch_size):
+            gs.setQMap(ns.QM)
+        
+            while not gs.game_finished:
+                gs.takeStep()
+            ns.QM = gs.QMap
+            gs.resetGame()     
+    ##   ##   ##   ##    ##   ##   ##   ##  
+   
+    import multiprocessing
+    manager = multiprocessing.Manager()
+    ns = manager.Namespace()
+    ns.QM = QM
+    
+    jobs = []
+    for _ in range(runs):
+        p = multiprocessing.Process(target=playBatch, args=(ns, game_state, policies, batch_size) )
+        jobs.append(p)
+        p.start()
+        
+    for p in jobs:
+        p.join()
+
+    return ns.QM
 
 
 def printTally(q_map, game_state, playerX, playerO, n_games):
@@ -140,8 +156,7 @@ def printTally(q_map, game_state, playerX, playerO, n_games):
         
 def run():
     size = 3
-    # QM, tally = playGames(QMap(), GameState(size), ['minimax', 'ideal'], 1, debug=True)
-    # print tally
+
 
     ######################
     # Minimax rough stats
@@ -198,30 +213,30 @@ def run():
     print
 
     print
-    
+
     ############################
     # Q-Learning rough stats
-    import multiprocessing
-    print "Q-Learning rough stats {}x{}".format(size,size)
-    
     # Seed Q with initial random games
-    # manager = multiprocessing.Manager()
-    # ns = manager.Namespace()
-    # ns.QM = QMap()
-    # p = multiprocessing.Process(target=playGames, args=(ns, GameState(size, learning=True), ['random', 'random'], 10))
-    # p.start()
-    # p.join()
-    # print ns.QM.Q
-                                
     QM, tally = playGames(QMap(), GameState(size, learning=True), ['random', 'random'], 70)
-    
     # player 2 learning against a random player 1
     QM, tally = playGames(QM, GameState(size, learning=True), ['random', 'Qlearning'], 1000, check_convergence=True)
     # Now player 1 learning against a random player 2
     QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'random'], 1000, check_convergence=True)
     # Have two agents learn against each other
     QM, tally = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 1000, check_convergence=True)
-
+    
+    # # Seed Q with initial random games
+    # start = time()
+    # QM = trainQ(QMap(), GameState(size, learning=True), ['random', 'random'], runs=7, batch_size=10)
+    # # player 2 learning against a random player 1
+    # QM = trainQ(QM, GameState(size, learning=True), ['random', 'Qlearning'], runs=10, batch_size=100)
+    # # Now player 1 learning against a random player 2
+    # QM = trainQ(QM, GameState(size, learning=True), ['Qlearning', 'random'], runs=10, batch_size=100)
+    # # Have two agents learn against each other
+    # QM = trainQ(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], runs=10, batch_size=100)
+    # print time() - start
+    
+    print "Q-Learning rough stats {}x{}".format(size,size)
     print "TicTacToe X-O win/loss/draw ratio: 91:44:3"
     print "Normalized:"
     print "0.6594 : 0.31884 : 0.0217"
@@ -245,8 +260,6 @@ def run():
     QM, tally = playGames(QM, GameState(size), ['Qlearning', 'Qlearning'], 30)
     print tally
 
-    ####### Store QMap #########
-    
     ##### Explore Q #####
     # Q = QM.getQ()
     # M = max(len(seq) for seq in Q.keys())
@@ -256,6 +269,15 @@ def run():
     #     for seq in explored:
     #         print seq, Q[seq]
     #     print
+
+    ####### Store/Load QMap #########
+    import pickle
+    # with open("./lucky_3x3_Q.pickle", 'wb') as f:
+    #     pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
+    # with open("./lucky_3x3_Q.pickle", 'rb') as f:
+    #     QM = pickle.load(f)
+        
+
 
 
 ############## Tests ###################

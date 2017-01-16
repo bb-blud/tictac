@@ -1,7 +1,7 @@
 import random
 
 debug = False
-seed = 01152017
+seed = 01162017
 random.seed(seed)
 
 class Strateegery(object):
