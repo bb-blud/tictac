@@ -5,6 +5,7 @@ seed = 01162017
 random.seed(seed)
 
 class Strateegery(object):
+    
     def __init__(self, game_state):
         self.game_state = game_state
 
@@ -45,7 +46,10 @@ class Strateegery(object):
     ###########################################################
     def Qlearning(self, player, threshold = .3):
         gs = self.game_state
+        
         Q = gs.QMap.Q
+        if player.use_inner_Q:
+            Q = player.inner_Q
 
         # All indices that are legal next moves
         valid_indices= [ index for index in range(gs.size**2) if gs.validMove(index, gs.game_sequence) ]
@@ -64,7 +68,7 @@ class Strateegery(object):
             #print 'uncharted'
             return random.choice(uncharted_i), player.mark
 
-        # Q values of the future sequences that could be legally taken
+        # Q index and values of the future sequences that could be legally taken
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
         
         if index_and_val:
@@ -86,8 +90,8 @@ class Strateegery(object):
         size = self.game_state.size
         measure = 0
         
-        if gs.isTie(sequence):
-            return 0
+        # if gs.isTie(sequence):  # Checking for a tie slows minimax very slightly and
+        #     return 0            # it did not seem to improve performance
 
         for n in range(1,size):
             measure += n * len(self.linesOfRankN(n, sequence, gs.players[0]))
@@ -98,7 +102,7 @@ class Strateegery(object):
         sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
         measure += sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))
         return measure
-        
+
     def isLeaf(self, sequence, player):
         gs = self.game_state        
         if gs.isTie(sequence):

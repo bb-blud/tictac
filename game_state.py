@@ -1,4 +1,3 @@
-import random as ran
 
 class Player(object):
     mark = None
