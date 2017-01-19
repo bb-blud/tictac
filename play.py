@@ -24,7 +24,10 @@ class LearningPlayer(Player):
             'minimax'  : self.strategies.minimaxMove,
             'ideal'    : self.strategies.ideal,
             'Qlearning': self.strategies.Qlearning,
+            'miniQmax' : self.strategies.minimaxMove,
+            
             'debug'    : self.debug}[self.policy](self)
+
         return move
     
     def setInnerQ(self, QM):
@@ -242,7 +245,6 @@ def breed(QM1, QM2, size, n_cycles):
 
 def run():
     size = 3
-
     ###########################
     # Minimax policy stats 3x3
     # duels  = ('P1 actual counts', 'Minimax as player 1', 'P2 actual counts', 'Minimax as player 2')
@@ -338,30 +340,49 @@ def run():
     # # Have two agents learn against  each other
     # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), 1000)
     
-    
+
 
     # Using Multiprocess
     # Seed Q with initial random games
-    # start = time()
-    # QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=7, batch_size=100)
+    start = time()
+    QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=7, batch_size=100)
     
-    # # player 2 learning against a random player 1
-    # QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=10, batch_size=100)
+    # player 2 learning against a random player 1
+    QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=10, batch_size=100)
     
-    # # Now player 1 learning against a random player 2
-    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=10, batch_size=100)
+    # Now player 1 learning against a random player 2
+    QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=10, batch_size=100)
     
-    # # Have two agents learn against each other
-    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True), runs=10, batch_size=300)
-    # print time() - start
+    print "Starting Q v Q "
+    print time() - start    
+    # Have two agents learn against each other
+    QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True), runs=10, batch_size=300)
+    
+    print "Starting mQm v mQm "
+    print time() - start    
+    QM = trainQ(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True), runs=10, batch_size=30)
+    
+    print time() - start
 
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 30, check_convergence = False)
+        #miniQMax
+    # for k in QM.Q:
+    #     print k, QM.Q[k]
+
+    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
+    #     lucky_Q = pickle.load(f)
+        
+    print "Start minQMax"
+    start = time ()    
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'miniQmax']), 100, check_convergence = False)
+    print tally  , time() -start
+
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 2, check_convergence = False, debug=True)
     # print tally
 
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 30, check_convergence = False)
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 2, check_convergence = False, debug=True)
     # print tally
 
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 30, check_convergence = False)
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 2, check_convergence = False,debug=True)
     # print tally
 
 
@@ -413,28 +434,20 @@ def run():
     ##################
     # Breed experiment
     size = 3 
-    with open("../lucky_3x3_Q.pickle", 'rb') as f:
-        lucky_Q = pickle.load(f)
+    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
+    #     QM = pickle.load(f)
 
-    lucky2 = breed(lucky_Q, QMap(), size, 1000)
-
-    offspring = lucky2
-    QM = None
-    rwin = 0
-    gs = setupGame(offspring, size, ['Qlearning', 'random'])
-    bar = min( getRatios(gs,100)[2] for k in range(3) )
-
-    for gen in range(3):
-        while rwin <=  bar:
-            QM = breed(offspring, QMap(), size, 1000)
-            gs = setupGame(QM, size, ['Qlearning', 'random'])
-            rwin = getRatios(gs,100)[2]
-
-        offspring = QM
-
-    gs = setupGame(offspring, size, ['Qlearning', 'random'])
-    print getRatios(gs,100)
         
+    # lucky2 = breed(QM, QMap(), size, 1000)
+
+    # columns = ('lucky2 vs random', 'random vs random')
+    # ratios = np.transpose(fightDuels([lucky2, QMap()], [ ['Qlearning', 'random'],
+    #                                              ['random', 'random'] ], size, 100 ) )
+    # graphStats( columns , ratios, 'lucky2 vs random')
+    # gs = setupGame(lucky2, size, ['Qlearning', 'random'])
+    # ratios = np.transpose([getRatios(gs, 1000)])
+    # graphStats( , ratios, 'lucky2 vs random')
+    
     # columns  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
     
     # ratios = fightDuels([lucky_Q, QMap(), QMap()], [ ['random', 'Qlearning'],
@@ -473,7 +486,22 @@ def run():
     # with open(, 'rb') as f:
     #     QM = pickle.load(f)
 
+    # offspring = lucky2
+    # QM = None
+    # rwin = 0
+    # gs = setupGame(offspring, size, ['Qlearning', 'random'])
+    # bar = min( getRatios(gs,100)[2] for k in range(3) )
 
+    # for gen in range(3):
+    #     while rwin <=  bar:
+    #         QM = breed(offspring, QMap(), size, 1000)
+    #         gs = setupGame(QM, size, ['Qlearning', 'random'])
+    #         rwin = getRatios(gs,100)[2]
+
+    #     offspring = QM
+
+    # gs = setupGame(offspring, size, ['Qlearning', 'random'])
+    # print getRatios(gs,100)
 
 
     

@@ -103,6 +103,14 @@ class Strateegery(object):
         measure += sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))
         return measure
 
+    ##### miniQMax #####
+    def miniQMax(self, sequence, player):
+        gs = self.game_state
+        Q = gs.QM.Q
+        val = Q.get(tuple(sequence), 0)
+        return val 
+    #################
+
     def isLeaf(self, sequence, player):
         gs = self.game_state        
         if gs.isTie(sequence):
@@ -110,13 +118,13 @@ class Strateegery(object):
         if len(self.linesOfRankN(gs.size, sequence, player)) > 0:  # Winning line game over
             return True
         
-    def minimax(self, sequence, depth, Min, Max, player):
+    def minimax(self, sequence, depth, Min, Max, player, evaluate):
         gs = self.game_state
         size = gs.size
         opponent = [p for p in gs.players if p.mark is not player.mark][0]
 
         if self.isLeaf(sequence, player) or depth == 0:
-            return self.minimaxMeasure(sequence, player)
+            return evaluate(sequence, player)
 
         valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ]
         ## Max
@@ -124,7 +132,7 @@ class Strateegery(object):
             v = Min
             for i in valid_i:
                 child_seq = sequence[:] + [(i, player.mark)]
-                v_c = self.minimax(child_seq, depth-1, v, Max, opponent)
+                v_c = self.minimax(child_seq, depth-1, v, Max, opponent, evaluate)
                 if v_c > v:
                     v = v_c
                 if v > Max:
@@ -135,7 +143,7 @@ class Strateegery(object):
             v = Max
             for i in valid_i:
                 child_seq = sequence[:] + [(i, player.mark)]
-                v_c = self.minimax(child_seq, depth-1, Min, v, opponent)
+                v_c = self.minimax(child_seq, depth-1, Min, v, opponent, evaluate)
                 if v_c < v:
                     v = v_c
                 if v < Min:
@@ -150,10 +158,13 @@ class Strateegery(object):
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
         optimal = {gs.players[0].mark : max, gs.players[1].mark : min}[player.mark]
 
+        evaluate, depth  = { 'miniQmax' : (self.miniQMax,  3),
+                             'minimax'  : (self.minimaxMeasure, 2) }[player.policy]
+
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
-            mm = self.minimax(gs.game_sequence[:] + [move], 2, -size*2, size*2, opponent)
+            mm = self.minimax(gs.game_sequence[:] + [move], depth, -size*2, size*2, opponent, evaluate)
             moves.append((mm, move))
 
         return optimal(moves)[1]
