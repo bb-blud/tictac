@@ -47,7 +47,7 @@ class Strateegery(object):
     def Qlearning(self, player, threshold = .3):
         gs = self.game_state
         
-        Q = gs.QMap.Q
+        Q = gs.QM.Q
         if player.use_inner_Q:
             Q = player.inner_Q
 

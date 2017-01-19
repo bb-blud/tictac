@@ -1,4 +1,5 @@
 from time import time
+from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -47,28 +48,41 @@ class LearningPlayer(Player):
             if self.mark == 'O':
                 return self.Omoves.popleft()
         return
+    
+def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None):
+    gs = GameState(game_size,  learning)
+    gs.setQMap(globalQM)
+    
+    player1 = LearningPlayer(marks[0], gs, policies[0])
+    if p1QM is not None:
+        player1.setInnerQ(p1QM)
+        
+    player2 = LearningPlayer(marks[1], gs, policies[1])
+    if p2QM is not None:
+        player2.setInnerQ(p2QM)
 
-def playGames(cummulativeQ, game_state, n_games, check_convergence=True,  debug=False):
+    gs.setPlayers(player1, player2)
+
+    return gs
+
+
+def playGames(game_state, n_games, check_convergence=True,  debug=False):
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
     is_converging = False
     
     ##### Initialize #####
     gs = game_state
-    #gs.setPlayers(LearningPlayer('X', gs, policies[0]), LearningPlayer('O', gs, policies[1] ) )
 
     #### Crude convergence test ####
-    from collections import deque
-    
     repeats = deque()
     for game in range(5):
-        gs.setQMap(cummulativeQ)
+
         while not gs.game_finished:
             gs.takeStep()
             if debug:
                 gs.printGame()
         repeats.append(gs.game_sequence)
-        cummulativeQ = gs.QMap
         gs.resetGame()
 
     ######### Play Games #########
@@ -76,7 +90,6 @@ def playGames(cummulativeQ, game_state, n_games, check_convergence=True,  debug=
     
     current = []
     for game in range(n_games):
-        gs.setQMap(cummulativeQ)
 
         while not gs.game_finished:
             gs.takeStep()
@@ -86,7 +99,6 @@ def playGames(cummulativeQ, game_state, n_games, check_convergence=True,  debug=
             gs.printGame()
             print
 
-        cummulativeQ = gs.QMap
         tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
 
         if debug:
@@ -120,7 +132,7 @@ def playGames(cummulativeQ, game_state, n_games, check_convergence=True,  debug=
         # for b in bads:
         #     print b
     
-    return cummulativeQ, tally, is_converging
+    return gs.QM, tally, is_converging
 
 def trainQ(QM, game_state, policies, runs, batch_size):
     
@@ -208,14 +220,15 @@ def graphStats(columns, data, strategy): #Based on http://matplotlib.org/example
     plt.show()
 
 
-def getRatios(q_map, game_state, playerX, playerO, n_games):
+def getRatios(game_state, n_games):
     
-    QM, tally, conv = playGames(q_map, game_state, [playerX, playerO], n_games)
+    QM, tally, conv = playGames(game_state, n_games)
     
     ts = [1.*tally[(True, False)], 1.*tally[(False, True)], 1.*tally[(False,False)]]
     
     s = sum(ts)
     return [ts[1]/s, ts[2]/s, ts[0]/s]
+
     
 def run():
     size = 3
@@ -243,20 +256,20 @@ def run():
 
     
     # # #########################
-    # # Ideal policy stats 3x3
+    # Ideal policy stats 3x3
     # duels  = ('P1 actual counts', 'Ideal as player1', 'P2 actual counts', 'Ideal as player 2')
     
     # ratios = np.array(
     #     # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
     #     [[ 0/94, 3.0/94, 91.0/94],
               
-    #      getRatios(QMap(), GameState(size), 'ideal', 'random', n_games = 1000),
+    #      getRatios(setupGame(QMap(), size, ['ideal', 'random']), n_games = 1000),
          
     #      # Perfect O player 3x3 win/draw/loss ratio 0:3:44 or 0.9363 :0.0638 : 0
     #      [ 0/47, 3.0/47, 44.0/47 ],
 
     #      # This guy needs to be reversed because we are interested in player2 wins
-    #      getRatios(QMap(), GameState(size), 'random', 'ideal', n_games = 1000)[::-1] ])
+    #      getRatios(setupGame(QMap(), size, ['random', 'ideal']), n_games = 1000)[::-1] ])
          
     
     # ratios = np.transpose(ratios)
@@ -342,23 +355,26 @@ def run():
     ######################
     # Q-Learning Training
     # Seed Q with initial random games
-    QM, tally, conv = playGames(QMap(), GameState(size, learning=True), ['random', 'random'], 70)
-    # player 2 learning against a random player 1
-    QM, tally, conv = playGames(QM, GameState(size, learning=True), ['random' 'Qlearning'], 1000)
-    # Now player 1 learning against a random player 2
-    QM, tally, conv = playGames(QM, GameState(size, learning=True), ['Qlearning', 'random'], 1000)
-    # Have two agents learn against each other
-    QM, tally, conv = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 1000)
+    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 70)
     
-    # Single process
-    # Seed Q with initial random games
-    QMl, tally, conv = playGames(QMlap(), GameState(size, learning=True), ['random', 'random'], 70)
-    # player 2 learning against a random player 1
-    QMl, tally, conv = playGames(QMl, GameState(size, learning=True), ['Qlearning', 'random'], 1000)
-    # Now player 1 learning against a random player 2
-    QMl, tally, conv = playGames(QMl, GameState(size, learning=True), ['random', 'Qlearning'], 1000)
-    # Have two agents learn against each other
-    QMl, tally, conv = playGames(QMl, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 1000)
+    # # player 2 learning against a random player 1
+    # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],    learning=True), 1000)
+    
+    # # Now player 1 learning against a random player 2
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True),  1000)
+    
+    # # Have two agents learn against  each other
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), 1000)
+    
+    # # Single process
+    # # Seed Q with initial random games
+    # QMl, tally, conv = playGames(QMlap(), GameState(size, learning=True), ['random', 'random'], 70)
+    # # player 2 learning against a random player 1
+    # QMl, tally, conv = playGames(QMl, GameState(size, learning=True), ['Qlearning', 'random'], 1000)
+    # # Now player 1 learning against a random player 2
+    # QMl, tally, conv = playGames(QMl, GameState(size, learning=True), ['random', 'Qlearning'], 1000)
+    # # Have two agents learn against each other
+    # QMl, tally, conv = playGames(QMl, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 1000)
     
 
     # Using Multiprocess
@@ -376,14 +392,14 @@ def run():
     # QM, tally, conv = playGames(QM, GameState(size, learning=True), ['Qlearning', 'Qlearning'], 100,debug=True)
     # print time() - start
 
-    QM, tally, conv = playGames(QM, GameState(size), ['Qlearning', 'ideal'], 30, check_convergence = False)
-    print tally
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 30, check_convergence = False)
+    # print tally
 
-    QM, tally, conv = playGames(QM, GameState(size), ['Qlearning', 'minimax'], 30, check_convergence = False)
-    print tally
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 30, check_convergence = False)
+    # print tally
 
-    QM, tally, conv = playGames(QM, GameState(size), ['Qlearning', 'Qlearning'], 30, check_convergence = False)
-    print tally
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 30, check_convergence = False)
+    # print tally
 
 
     #####################
@@ -395,58 +411,58 @@ def run():
         
     # #############################
     # # Q-learnin vs Ideal stats 
-    duels  = ('Ideal vs Qlearning', 'Ideal vs random', 'random vs Ideal', 'Qlearning vs Ideal')
+    # duels  = ('Ideal vs Qlearning', 'Ideal vs random', 'random vs Ideal', 'Qlearning vs Ideal')
     
-    ratios = np.array(
-        # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
-        [getRatios(QM, GameState(size), 'ideal', 'Qlearning', n_games = 100),
+    # ratios = np.array(
+    #     # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
+    #     [getRatios(QM, GameState(size), 'ideal', 'Qlearning', n_games = 100),
               
-         getRatios(QMap(), GameState(size), 'ideal', 'random', n_games = 100),
+    #      getRatios(QMap(), GameState(size), 'ideal', 'random', n_games = 100),
          
-         getRatios(QMap(), GameState(size), 'random', 'ideal', n_games = 100),
+    #      getRatios(QMap(), GameState(size), 'random', 'ideal', n_games = 100),
          
-         getRatios(QM, GameState(size), 'Qlearning', 'ideal', n_games = 100) ])
+    #      getRatios(QM, GameState(size), 'Qlearning', 'ideal', n_games = 100) ])
     
-    ratios = np.transpose(ratios)
+    # ratios = np.transpose(ratios)
 
-    graphStats(duels, ratios, 'Q-learning vs Ideal {}x{}'.format(size,size))
+    # graphStats(duels, ratios, 'Q-learning vs Ideal {}x{}'.format(size,size))
 
 
     # ################################
     # # Q-learnin vs Minimax stats 
-    duels  = ('Minimax vs Qlearning', 'Minimax vs random', 'random vs Minimax', 'Qlearning vs Minimax')
+    # duels  = ('Minimax vs Qlearning', 'Minimax vs random', 'random vs Minimax', 'Qlearning vs Minimax')
     
-    ratios = np.array(
-        # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
-        [getRatios(QM, GameState(size), 'minimax', 'Qlearning', n_games = 20),
+    # ratios = np.array(
+    #     # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
+    #     [getRatios(QM, GameState(size), 'minimax', 'Qlearning', n_games = 20),
               
-         getRatios(QMap(), GameState(size), 'minimax', 'random', n_games = 20),
+    #      getRatios(QMap(), GameState(size), 'minimax', 'random', n_games = 20),
          
-         getRatios(QMap(), GameState(size), 'random', 'minimax', n_games = 20),
+    #      getRatios(QMap(), GameState(size), 'random', 'minimax', n_games = 20),
          
-         getRatios(QM, GameState(size), 'Qlearning', 'minimax', n_games = 20) ])
+    #      getRatios(QM, GameState(size), 'Qlearning', 'minimax', n_games = 20) ])
     
-    ratios = np.transpose(ratios)
+    # ratios = np.transpose(ratios)
 
-    graphStats(duels, ratios, 'Q-learning vs Minimax {}x{}'.format(size,size))
+    # graphStats(duels, ratios, 'Q-learning vs Minimax {}x{}'.format(size,size))
 
     # ################################
     # # Q-learn vs Random stats 
-    duels  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
+    # duels  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
     
-    ratios = np.array(
-        # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
-        [getRatios(QM, GameState(size), 'random', 'Qlearning', n_games = 100),
+    # ratios = np.array(
+    #     # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
+    #     [getRatios(QM, GameState(size), 'random', 'Qlearning', n_games = 100),
               
-         getRatios(QMap(), GameState(size), 'Qlearning', 'random', n_games = 100),
+    #      getRatios(QMap(), GameState(size), 'Qlearning', 'random', n_games = 100),
          
-         getRatios(QMap(), GameState(size), 'random', 'random', n_games = 100),
+    #      getRatios(QMap(), GameState(size), 'random', 'random', n_games = 100),
          
-         [44.0/138, 3.0/138, 91.0/138 ]  ])
+    #      [44.0/138, 3.0/138, 91.0/138 ]  ])
     
-    ratios = np.transpose(ratios)
+    # ratios = np.transpose(ratios)
 
-    graphStats(duels, ratios, 'Qlearning vs Random {}x{}'.format(size,size))
+    # graphStats(duels, ratios, 'Qlearning vs Random {}x{}'.format(size,size))
     
     ##### Explore Q #####
     # Q = QM.getQ()

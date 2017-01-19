@@ -41,7 +41,10 @@ class QMap(object):
 class GameState(object):
     players = (None, None)
     current_player = None
-    def __init__(self, size=3, learning=False):
+    def __init__(self, size=3, learning=False):        
+        # Global QMap
+        self.QM = QMap()
+        
         # Game size
         self.size = abs(size)
         self.learning = learning
@@ -59,11 +62,11 @@ class GameState(object):
         self.players = player1, player2
         self.current_player = self.players[0]
         
-    def setQMap(self, Q):
-        self.QMap = Q
+    def setQMap(self, QM):
+        self.QM = QM
 
     def getQMap(self):
-        return self.QMap
+        return self.QM
     
     def validMove(self, index, sequence):
         if index not in ( m[0] for m in sequence):
@@ -82,7 +85,7 @@ class GameState(object):
         if self.validMove(index, self.game_sequence):
              self.game_sequence.append( (index, mark) )
              if self.learning:
-                 self.QMap.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
+                 self.QM.visitQ(tuple( (self.transformIndex(index), mark) for index, mark in self.game_sequence) )
         else:
             print "<----------------------invalid move by {} at index {}----------------------------->".format( mark, index)
             self.game_finished = True
@@ -97,7 +100,7 @@ class GameState(object):
         # Update Q map
         if self.game_finished and self.learning:
             t_game_sequence = [ (self.transformIndex(index) , mark ) for index, mark in self.game_sequence ]
-            self.QMap.updateQ(t_game_sequence, self.players, self.size)
+            self.QM.updateQ(t_game_sequence, self.players, self.size)
             
         # Set player to have next turn
         self.current_player = self.otherPlayer()
