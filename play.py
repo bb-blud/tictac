@@ -412,32 +412,50 @@ def run():
 
     ##################
     # Breed experiment
+    size = 3 
     with open("../lucky_3x3_Q.pickle", 'rb') as f:
         lucky_Q = pickle.load(f)
 
-    lucky2 = breed(lucky_Q, QMap(), 3, 1000)
+    lucky2 = breed(lucky_Q, QMap(), size, 1000)
 
-    columns  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
-    
-    ratios = fightDuels([lucky_Q, QMap(), QMap()], [ ['random', 'Qlearning'],
-                                               ['Qlearning', 'random'],
-                                               ['random', 'random' ]  ], size, n_games = 100)
-    
-    ratios.append([44.0/138, 3.0/138, 91.0/138 ])
-    ratios = np.transpose(ratios)
+    offspring = lucky2
+    QM = None
+    rwin = 0
+    gs = setupGame(offspring, size, ['Qlearning', 'random'])
+    bar = min( getRatios(gs,100)[2] for k in range(3) )
 
-    graphStats(columns, ratios, 'Lucky 3x3 Q  vs Random {}x{}'.format(size,size))
-    
-    columns  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
-    
-    ratios = fightDuels([lucky2, QMap(), QMap()], [ ['random', 'Qlearning'],
-                                               ['Qlearning', 'random'],
-                                               ['random', 'random' ]  ], size, n_games = 100)
-    
-    ratios.append([44.0/138, 3.0/138, 91.0/138 ])
-    ratios = np.transpose(ratios)
+    for gen in range(3):
+        while rwin <=  bar:
+            QM = breed(offspring, QMap(), size, 1000)
+            gs = setupGame(QM, size, ['Qlearning', 'random'])
+            rwin = getRatios(gs,100)[2]
 
-    graphStats(columns, ratios, 'Lucky2 3x3 Q  vs Random {}x{}'.format(size,size))
+        offspring = QM
+
+    gs = setupGame(offspring, size, ['Qlearning', 'random'])
+    print getRatios(gs,100)
+        
+    # columns  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
+    
+    # ratios = fightDuels([lucky_Q, QMap(), QMap()], [ ['random', 'Qlearning'],
+    #                                            ['Qlearning', 'random'],
+    #                                            ['random', 'random' ]  ], size, n_games = 100)
+    
+    # ratios.append([44.0/138, 3.0/138, 91.0/138 ])
+    # ratios = np.transpose(ratios)
+
+    # graphStats(columns, ratios, 'Lucky 3x3 Q  vs Random {}x{}'.format(size,size))
+    
+    # columns  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
+    
+    # ratios = fightDuels([lucky2, QMap(), QMap()], [ ['random', 'Qlearning'],
+    #                                            ['Qlearning', 'random'],
+    #                                            ['random', 'random' ]  ], size, n_games = 100)
+    
+    # ratios.append([44.0/138, 3.0/138, 91.0/138 ])
+    # ratios = np.transpose(ratios)
+
+    # graphStats(columns, ratios, 'Lucky2 3x3 Q  vs Random {}x{}'.format(size,size))
     
     ##### Explore Q #####
     # Q = QM.getQ()
