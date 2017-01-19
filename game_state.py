@@ -64,9 +64,6 @@ class GameState(object):
         
     def setQMap(self, QM):
         self.QM = QM
-
-    def getQMap(self):
-        return self.QM
     
     def validMove(self, index, sequence):
         if index not in ( m[0] for m in sequence):
