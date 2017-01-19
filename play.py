@@ -48,7 +48,8 @@ class LearningPlayer(Player):
             if self.mark == 'O':
                 return self.Omoves.popleft()
         return
-    
+#########################################################################################
+
 def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None):
     gs = GameState(game_size,  learning)
     gs.setQMap(globalQM)
@@ -64,7 +65,6 @@ def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1
     gs.setPlayers(player1, player2)
 
     return gs
-
 
 def playGames(game_state, n_games, check_convergence=True,  debug=False):
     ####### Tally ########
@@ -218,7 +218,6 @@ def graphStats(columns, data, strategy): #Based on http://matplotlib.org/example
 
 
 def getRatios(game_state, n_games):
-    
     QM, tally, conv = playGames(game_state, n_games)
     
     ts = [1.*tally[(True, False)], 1.*tally[(False, True)], 1.*tally[(False,False)]]
@@ -226,10 +225,10 @@ def getRatios(game_state, n_games):
     s = sum(ts)
     return [ts[1]/s, ts[2]/s, ts[0]/s]
 
-def fightDuels(QM, duels, size, n_games):
+def fightDuels(QMs, duels, size, n_games):
     ratios = []
-    for duel in duels:
-        ratios.append(getRatios(setupGame(QM, size, duel), n_games))
+    for i, duel in enumerate(duels):
+        ratios.append(getRatios(setupGame(QMs[i], size, duel), n_games))
     return ratios
 
     
@@ -297,21 +296,21 @@ def run():
     # ##
     # size = 4
     # columns = ('Trial 1', 'Trial 2')
-    # ratios = np.transpose(fightDuels(QMap(), [ ['random','random'], ['random','random'] ], size, 10000))
+    # ratios = np.transpose(fightDuels([QMap(), QMap()], [ ['random','random'], ['random','random'] ], size, 10000))
 
     # graphStats(columns, ratios, 'Approximate baseline win/draw/loss ratios 4x4')
 
     # ## 
     # size = 5
     # columns = ('Trial 1', 'Trial 2')
-    # ratios = np.transpose(fightDuels(QMap(), [ ['random','random'], ['random','random'] ], size, 10000))
+    # ratios = np.transpose(fightDuels([QMap(), QMap()], [ ['random','random'], ['random','random'] ], size, 10000))
 
     # graphStats(columns, ratios, 'Approximate baseline win/draw/loss ratios 5x5')
 
     # ##
     # size = 6
     # columns = ('Trial 1', 'Trial 2')
-    # ratios = np.transpose(fightDuels(QMap(), [ ['random','random'], ['random','random'] ], size, 10000))
+    # ratios = np.transpose(fightDuels([QMap(), QMap()], [ ['random','random'], ['random','random'] ], size, 10000))
 
     # graphStats(columns, ratios, 'Approximate baseline win/draw/loss ratios 6x6')
     
@@ -368,23 +367,18 @@ def run():
         
     # QM, tally, conv = playGames(QM, size, ['Qlearning','minimax'], 1, debug=True)
         
-    # #############################
-    # # Q-learnin vs Ideal stats 
-    # duels  = ('Ideal vs Qlearning', 'Ideal vs random', 'random vs Ideal', 'Qlearning vs Ideal')
+    #############################
+    # Q-learning vs Ideal stats 
+    columns  = ('Ideal vs Qlearning', 'Ideal vs random', 'random vs Ideal', 'Qlearning vs Ideal')
     
-    # ratios = np.array(
-    #     # Perfect X player 3x3 win/draw/loss ratio 91:3:0 or 0.9681 : 0.0319 : 0  
-    #     [getRatios(QM, size, 'ideal', 'Qlearning', n_games = 100),
-              
-    #      getRatios(setupGame(QMap(), size, 'ideal', 'random', n_games = 100),
-         
-    #      getRatios(setupGame(QMap(), size, 'random', 'ideal', n_games = 100),
-         
-    #      getRatios(setupGame(QM, size, 'Qlearning', 'ideal', n_games = 100) ])
+    ratios = np.transpose(fightDuels([QM, QMap(), QMap(), QM], [ ['ideal', 'Qlearning'],
+                                                                 ['ideal', 'random'   ],
+                                                                 ['random', 'ideal'   ],
+                                                                 ['Qlearning', 'ideal'] ], size, n_games = 100) )
     
-    # ratios = np.transpose(ratios)
+    ratios = np.transpose(ratios)
 
-    # graphStats(duels, ratios, 'Q-learning vs Ideal {}x{}'.format(size,size))
+    graphStats(columns, ratios, 'Q-learning vs Ideal {}x{}'.format(size,size))
 
 
     # ################################
