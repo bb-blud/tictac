@@ -14,7 +14,7 @@ class QMap(object):
    
     def __init__(self):
         self.Q = {}
-        self.gamma = 0.8
+        self.gamma = 0.4
         
     def visitQ(self, sequence):
         if not self.Q.get(sequence, False):
