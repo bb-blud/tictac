@@ -49,7 +49,7 @@ class Strateegery(object):
         
         Q = gs.QM.Q
         if player.use_inner_Q:
-            Q = player.inner_Q
+            Q = player.inner_Q.Q
 
         # All indices that are legal next moves
         valid_indices= [ index for index in range(gs.size**2) if gs.validMove(index, gs.game_sequence) ]
