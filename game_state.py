@@ -32,7 +32,7 @@ class QMap(object):
             
             for i in range(1, len(game)-1):
                 sub_sequence = tuple(game[:i])
-                self.Q[sub_sequence] +=  i*reward * self.gamma**i#sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ])
+                self.Q[sub_sequence] +=  reward * self.gamma**i#sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ])
             # for i in range(1, len(game)-1):
             #     sub_sequence = tuple(game[:i])
             #     self.Q[sub_sequence] += sum([ 0.2*i*reward * self.gamma**(k-i) for k in range(i, len(game)) ])

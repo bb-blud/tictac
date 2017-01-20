@@ -383,7 +383,7 @@ def run():
     print "Starting minQmax"
     Q = QM.Q
     M = max(len(seq) for seq in Q.keys())
-    for k in range(1,M/2):
+    for k in range(1,M):
         print "Explored Moves at step", k
         explored = sorted( [(seq , Q[seq]) for seq in Q if len(seq) == k], key=lambda t:t[1] )
         

@@ -109,10 +109,12 @@ class Strateegery(object):
     ##### miniQMax #####
     def miniQMax(self, sequence, player):
         gs = self.game_state
+        sgn = {gs.players[0].mark : 1.0, gs.players[1].mark : -1.0}[player.mark]
         Q = gs.QM.Q
         val = Q.get(tuple(sequence), None)
-        # if val is None:
-        #     print "UNEXPLOREDUNEXPLOREDUNEXPLOREDUNEXPLOREDUNEXPLORED"
+        if val is None:
+            #gs.QM.Q[tuple(sequence)] = sgn * 0.033
+            return sgn * 0.01
         return val 
     #################
 
@@ -163,8 +165,8 @@ class Strateegery(object):
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
         optimal = {gs.players[0].mark : max, gs.players[1].mark : min}[player.mark]
 
-        evaluate = { 'miniQmax' : self.miniQMax,
-                     'minimax'  : self.minimaxMeasure }[player.policy]
+        evaluate, Min, Max = { 'miniQmax' : (self.miniQMax, -1.0, 1.0),
+                               'minimax'  : (self.minimaxMeasure, -size*2, size*2) }[player.policy]
         moves = []
         for i in valid_indices:
             move = (i, player.mark)
