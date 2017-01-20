@@ -28,15 +28,15 @@ class QMap(object):
             n = len(game)
             winner = [p for p in players if p.is_winner][0]
             sgn = { players[0].mark : 1.0, players[1].mark : -1.0 }[winner.mark]
-            reward = sgn * size**4 / n
+            reward = sgn #* size**4 / n
             
-            for i in range(1, len(game)):
+            for i in range(1, len(game)-1):
                 sub_sequence = tuple(game[:i])
-                self.Q[sub_sequence] += sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ])
-            # for i in range(1, len(game)):
+                self.Q[sub_sequence] +=  i*reward * self.gamma**i#sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ])
+            # for i in range(1, len(game)-1):
             #     sub_sequence = tuple(game[:i])
             #     self.Q[sub_sequence] += sum([ 0.2*i*reward * self.gamma**(k-i) for k in range(i, len(game)) ])
-            # #self.Q[tuple(game)] += sgn * size**2
+            #self.Q[tuple(game)] += sgn * size
 
     def getQ(self):
         return self.Q

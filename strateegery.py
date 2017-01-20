@@ -67,6 +67,9 @@ class Strateegery(object):
         if uncharted_i and random.random() > threshold and gs.step > 1: # If a move hasn't been done try it, randomly
             #print 'uncharted'
             return random.choice(uncharted_i), player.mark
+        
+        if gs.learning and random.random() > threshold :
+            return random.choice(valid_indices) , player.mark # return a random move while training to break sinks
 
         # Q index and values of the future sequences that could be legally taken
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
@@ -107,7 +110,9 @@ class Strateegery(object):
     def miniQMax(self, sequence, player):
         gs = self.game_state
         Q = gs.QM.Q
-        val = Q.get(tuple(sequence), 0)
+        val = Q.get(tuple(sequence), None)
+        # if val is None:
+        #     print "UNEXPLOREDUNEXPLOREDUNEXPLOREDUNEXPLOREDUNEXPLORED"
         return val 
     #################
 
@@ -150,7 +155,7 @@ class Strateegery(object):
                     return Min
             return v
 
-    def minimaxMove(self, player):
+    def minimaxMove(self, player, depth):
         gs = self.game_state
         size = gs.size
         opponent = gs.otherPlayer()
@@ -158,9 +163,8 @@ class Strateegery(object):
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
         optimal = {gs.players[0].mark : max, gs.players[1].mark : min}[player.mark]
 
-        evaluate, depth  = { 'miniQmax' : (self.miniQMax,  3),
-                             'minimax'  : (self.minimaxMeasure, 2) }[player.policy]
-
+        evaluate = { 'miniQmax' : self.miniQMax,
+                     'minimax'  : self.minimaxMeasure }[player.policy]
         moves = []
         for i in valid_indices:
             move = (i, player.mark)

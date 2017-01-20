@@ -10,10 +10,11 @@ from strateegery import Strateegery
 
 
 class LearningPlayer(Player):
-    def __init__(self, mark, game_state, policy):
+    def __init__(self, mark, game_state, policy, depth=2):
         super(LearningPlayer, self).__init__(mark, game_state)
         self.policy = policy
         self.strategies  = Strateegery(self.game_state)
+        self.depth = depth
         ##
         self.inner_Q = QMap()
         self.use_inner_Q = False
@@ -21,14 +22,17 @@ class LearningPlayer(Player):
     def makeMove(self):
         move = {
             'random'   : self.strategies.randomMove,
-            'minimax'  : self.strategies.minimaxMove,
             'ideal'    : self.strategies.ideal,
+            'minimax'  : self.strategies.minimaxMove,                        
             'Qlearning': self.strategies.Qlearning,
             'miniQmax' : self.strategies.minimaxMove,
             
-            'debug'    : self.debug}[self.policy](self)
+            'debug'    : self.debug}[self.policy]
+        
+        if self.policy in ['minimax', 'miniQmax']:
+            return move(self, self.depth)
 
-        return move
+        return move(self)
     
     def setInnerQ(self, QM):
         self.use_inner_Q = True
@@ -53,15 +57,15 @@ class LearningPlayer(Player):
         return
 #########################################################################################
 
-def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None):
+def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None, d1=2, d2=2):
     gs = GameState(game_size,  learning)
     gs.setQMap(globalQM)
-    
-    player1 = LearningPlayer(marks[0], gs, policies[0])
+
+    player1 = LearningPlayer(marks[0], gs, policies[0], d1)
     if p1QM is not None:
         player1.setInnerQ(p1QM)
         
-    player2 = LearningPlayer(marks[1], gs, policies[1])
+    player2 = LearningPlayer(marks[1], gs, policies[1], d2)
     if p2QM is not None:
         player2.setInnerQ(p2QM)
 
@@ -79,7 +83,7 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
 
     #### Crude convergence test ####
     repeats = deque()
-    for game in range(5):
+    for game in range(8):
 
         while not gs.game_finished:
             gs.takeStep()
@@ -329,60 +333,121 @@ def run():
     ######################
     # Q-Learning Training
     # Seed Q with initial random games
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 70)
-    
-    # # player 2 learning against a random player 1
-    # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],    learning=True), 1000)
-    
-    # # Now player 1 learning against a random player 2
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True),  1000)
-    
-    # # Have two agents learn against  each other
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), 1000)
-    
-
-
-    # Using Multiprocess
-    # Seed Q with initial random games
-    start = time()
-    QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=7, batch_size=100)
+    ts = [70, 500, 500, 500]
+        
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
     
     # player 2 learning against a random player 1
-    QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=10, batch_size=100)
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
     
     # Now player 1 learning against a random player 2
-    QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=10, batch_size=100)
+    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
     
-    print "Starting Q v Q "
-    print time() - start    
-    # Have two agents learn against each other
-    QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True), runs=10, batch_size=300)
-    
-    print "Starting mQm v mQm "
-    print time() - start    
-    QM = trainQ(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True), runs=10, batch_size=30)
-    
-    print time() - start
+    # Have two agents learn against  each other
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
 
-        #miniQMax
-    # for k in QM.Q:
-    #     print k, QM.Q[k]
+    # print "miniQmax d2"
+    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True,d1=3), 50)
+    # print "miniQmax d3"
+    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True,d2=3), 50)
+    # print "miniQmax d4"    
+    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True,d1=4,d2=4), 20)
+    
+    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 10)
+    # QM, tally, conv = playGames(setupGame(QMap(), size, ['Qlearning', 'Qlearning'],learning=True), 1000)
+    
+    # Using Multiprocess
+    # Seed Q with initial random games
+    # start = time()
+    # QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=7, batch_size=100)
+    
+    # # player 2 learning against a random player 1
+    # QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=10, batch_size=300)
+    
+    # # Now player 1 learning against a random player 2
+    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=10, batch_size=300)
+    
+    # print "Starting Q v Q training"    
+    # print time() - start    
+    # # Have two agents learn against each other
+    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True), runs=10, batch_size=600)
+    # print time() - start
+    
+    # print "Starting mQm v mQm "
+    # print time() - start    
+    # QM = trainQ(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True), runs=10, batch_size=240)
+    # print time() - start
+    
 
-    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
-    #     lucky_Q = pickle.load(f)
+    #miniQMax
+    print "Starting minQmax"
+    Q = QM.Q
+    M = max(len(seq) for seq in Q.keys())
+    for k in range(1,M/2):
+        print "Explored Moves at step", k
+        explored = sorted( [(seq , Q[seq]) for seq in Q if len(seq) == k], key=lambda t:t[1] )
         
-    print "Start minQMax"
+        for seq, val  in explored:
+            print seq, val
+        print
+
+
+    # with open("../mQm_3x3.pickle", 'wb') as f:
+    #     pickle.dump([ts, QM], f,  pickle.HIGHEST_PROTOCOL)
+
+    # # with open("../mQm_3x3.pickle", 'rb') as f:
+    # #     #lucky_Q = pickle.load(f)
+    # #     QM = pickle.load(f)
+        
+    print "Start Qlearn v minQMax"
     start = time ()    
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'miniQmax']), 100, check_convergence = False)
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'miniQmax'], d2=3), 100 )
     print tally  , time() -start
-
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 2, check_convergence = False, debug=True)
+    print
+    
+    print "Start minQmax v Qlearn"
+    start = time ()    
+    QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'Qlearning'], d1=3), 100)
+    print tally  , time() -start
+    print
+    
+    print "Start miniQmax v minimax"
+    start = time ()    
+    QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'minimax'], d1=3), 10)
+    print tally  , time() -start
+    print
+    
+    print "Start minimax v minQMax"
+    start = time ()    
+    QM, tally, conv = playGames(setupGame(QM, size, ['minimax', 'miniQmax'], d2=3), 10)
+    print tally  , time() -start
+    print
+    
+    print "Start miniQmax v random"
+    start = time ()    
+    QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'random'], d1=3), 100)
+    print tally  , time() -start    
+    print
+    
+    print "Start random v miniQmax"
+    start = time ()    
+    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'miniQmax'], d2=3), 100)
+    print tally  , time() -start
+    print
+    
+    print "Start random v random"
+    start = time ()
+    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'random']), 100)
+    print tally  , time() -start
+    # 0.6594 : 0.31884 : 0.0217
+    
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 2, check_convergence = False)
     # print tally
 
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 2, check_convergence = False, debug=True)
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 2, check_convergence = False)
     # print tally
 
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 2, check_convergence = False,debug=True)
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 2, check_convergence = False)
     # print tally
 
 
