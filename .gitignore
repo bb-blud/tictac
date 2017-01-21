@@ -1,6 +1,4 @@
 # Ignore python binary files
 *.pyc
-*.pickle
-.ipynb_checkpoints
-ipython_notebook_config.py
-*.ipynb
+.ipynb*
+
