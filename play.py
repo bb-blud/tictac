@@ -1,6 +1,7 @@
 from time import time
 from collections import deque
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 
@@ -393,10 +394,10 @@ def run():
     
     ######################
     # Q-Learning Training
-    Seed Q with initial random games
+    #Seed Q with initial random games
 
     ts = [70, 1000, 1000, 1000]
-        
+    start = time()    
     QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
     
     # player 2 learning against a random player 1
@@ -407,6 +408,7 @@ def run():
     
     # Have two agents learn against  each other
     QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+    print "Training time: " , time() - start 
 
     # Using Multiprocess
     # Seed Q with initial random games
@@ -419,25 +421,45 @@ def run():
     # # Now player 1 learning against a random player 2
     # QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=10, batch_size=300)
 
-
+    ########################
+    # display "quality" table
+    tallies = []
+    lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
     QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 30, check_convergence = False)
-    print tally
+    tallies.append([tally[l[1]] for l in lbls])
 
     QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 30, check_convergence = False)
-    print tally
+    tallies.append([tally[l[1]] for l in lbls])
 
     QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 30, check_convergence = False)
-    print tally    
+    tallies.append([tally[l[1]] for l in lbls])
 
-    columns  = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn', 'minimax vs miniQmax', 'miniQmax vs minimax')
-    ratios  = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax' ],
-                                     ['miniQmax', 'Qlearning'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )
+    quality_table = pd.DataFrame(tallies, columns=[l[0] for l in lbls],
+                                 index = ['Qlearning v ideal', 'Qlearning v minimax', 'Qlearning v Qlearning'])
+    print quality_table
+    print
+
+    #######################
+    # MiniQmax stats table
+    ratios  = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax'],
+                                     ['miniQmax', 'Qlearning'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )[::-1]
 
     ratios += fightDuels([QM, QM], [ ['minimax', 'miniQmax' ],
-                                     ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )
+                                     ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )[::-1]
+
+    ratios += fightDuels([QM, QM], [ ['miniQmax', 'ideal'],
+                                     ['ideal', 'miniQmax'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )[::-1]
     
-    ratios = np.transpose(ratios)
-    graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
+    cols = ["P1 win",  "draw", "P1 loss"]
+    
+    rows = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn',
+            'minimax vs miniQmax', 'miniQmax vs minimax',
+            'miniQmax vs Ideal', 'Ideal vs miniQmax')
+    
+    table = pd.DataFrame(ratios, columns = cols, index = rows)
+    print table
+    print "total time: " , time() - start
+    # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
 
     ## Comparison with random
     columns = ('Random vs miniQmax', 'miniQmax vs random')
@@ -459,13 +481,21 @@ def run():
     # with open("../lucky_3x3_Q.pickle", 'rb') as f:
     #     QM = pickle.load(f)
 
-    # columns  = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn', 'minimax vs miniQmax', 'miniQmax vs minimax')
+
     # ratios  = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax' ],
-    #                                  ['miniQmax', 'Qlearning'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )
+    #                                  ['miniQmax', 'Qlearning'] ], size, n_games = 10, p1ds = [2,3], p2ds = [3,2] )
 
     # ratios += fightDuels([QM, QM], [ ['minimax', 'miniQmax' ],
     #                                  ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )
+
     
+    # ratios = np.transpose(ratios)
+    # cols  = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn', 'minimax vs miniQmax', 'miniQmax vs minimax')
+    # rows = ["win",  "draw","loss"]
+    # table = pd.DataFrame(ratios,columns = cols, index = rows)
+    # print table 
+    # from IPython.display import display
+    # display(table)
     # ratios = np.transpose(ratios)
     # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
 
@@ -613,7 +643,7 @@ def run():
     # graphStats(columns, ratios, 'Lucky2 3x3 Q  vs Random {}x{}'.format(size,size))
     
     ##### Explore Q #####
-    # Q = QM.getQ()
+    # Q = QM.Q
     # M = max(len(seq) for seq in Q.keys())
     # for k in range(1,M):
     #     print "Explored Moves at step", k

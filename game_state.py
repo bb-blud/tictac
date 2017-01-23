@@ -1,4 +1,3 @@
-
 class Player(object):
     mark = None
     
@@ -15,7 +14,7 @@ class QMap(object):
     def __init__(self):
         self.Q = {}
         self.gamma = 0.4
-        
+        self.alpha = 0.8
     def visitQ(self, sequence):
         if not self.Q.get(sequence, False):
             self.Q[sequence] = 0
@@ -26,20 +25,21 @@ class QMap(object):
             reward = 0
         else:
             n = len(game)
+            alpha = self.alpha
+            
             winner = [p for p in players if p.is_winner][0]
             sgn = { players[0].mark : 1.0, players[1].mark : -1.0 }[winner.mark]
+            
             reward = sgn #* size**4 / n
             
             for i in range(1, len(game)):
                 sub_sequence = tuple(game[:i])
-                self.Q[sub_sequence] +=  reward * self.gamma**(i-1)#sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ])
-            # for i in range(1, len(game)-1):
-            #     sub_sequence = tuple(game[:i])
-            #     self.Q[sub_sequence] += sum([ 0.2*i*reward * self.gamma**(k-i) for k in range(i, len(game)) ])
-            #self.Q[tuple(game)] += sgn * size
 
-    def getQ(self):
-        return self.Q
+                # Temporal-difference method
+                V = self.Q[sub_sequence]
+                X = sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #reward * self.gamma**(i-1)
+                
+                self.Q[sub_sequence] = (1-alpha) * V + alpha * X
 
 class GameState(object):
     players = (None, None)
@@ -64,6 +64,9 @@ class GameState(object):
     def setPlayers(self, player1, player2):
         self.players = player1, player2
         self.current_player = self.players[0]
+        
+    def otherPlayer(self):
+        return [p for p in self.players if p is not self.current_player][0]
         
     def setQMap(self, QM):
         self.QM = QM
@@ -184,9 +187,6 @@ class GameState(object):
             reflectDiagonal = lambda (x,y): (y,x)
             self.transform = compose(reflectDiagonal, self.transform)
 
-    def otherPlayer(self):
-        return [p for p in self.players if p is not self.current_player][0]
-
     def getCoordinates(self, index):
         x , y = index%self.size, index//self.size
         return x,y
@@ -212,7 +212,7 @@ class GameState(object):
             if current_line is not None and current_line is 'Empty':
                 lines_in_seq[direction][coordinate] = [tac, move[0]]
 
-            elif current_line is not None and current_line[tic]== tac:
+            elif current_line is not None and current_line[tic] == tac:
                 lines_in_seq[direction][coordinate].append(move[0]) if move[0] not in lines_in_seq[direction][coordinate] else None
 
             else:
