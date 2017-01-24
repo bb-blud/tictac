@@ -328,7 +328,7 @@ def run():
     # graphStats(columns, ratios, 'Minimax policy against random 3x3')
     
     # ###########################
-    # # Minimax vs Ideal
+    # Minimax vs Ideal
     # print "Start minimax vs ideal"
     # size = 3
     # columns  = ('Minimax vs Ideal', 'Ideal vs Minimax')
@@ -390,43 +390,41 @@ def run():
 
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION    
-
     
     ######################
     # Q-Learning Training
     #Seed Q with initial random games
 
-    # ts = [70, 1000, 1000, 1000]
-    # start = time()    
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
+    ts = [70, 1000, 1000, 20000]
+    start = time()    
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
     
-    # # player 2 learning against a random player 1
+    # player 2 learning against a random player 1
     # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
     
     # # Now player 1 learning against a random player 2
     # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
     
-    # # Have two agents learn against  each other
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
-    # print "Training time: " , time() - start 
+    # Have two agents learn against  each other
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+    print "Training time: " , time() - start 
 
     #####################
     # Using Multiprocess
-    
-    # Seed Q with initial random games
-    start = time()
-    QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=15, batch_size=100)
-    
-    # player 2 learning against a random player 1
-    QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=20, batch_size=300)
-    
-    # Now player 1 learning against a random player 2
-    QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=20, batch_size=300)
-    
-    # Have two agents learn against  each other
-    QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True),runs=20, batch_size=300)
-    print "Training time: " , time() - start
 
+    # Seed Q with initial random games
+    # start = time()
+    # QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=15, batch_size=100)
+
+    # # player 2 learning against a random player 1
+    # QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=20, batch_size=300)
+
+    # # Now player 1 learning against a random player 2
+    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=20, batch_size=300)
+
+    # # Have two agents learn against  each other
+    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True),runs=20, batch_size=300)
+    # print "Training time: " , time() - start
 
     ########################
     # display "quality" table
@@ -448,37 +446,38 @@ def run():
 
     #######################
     # MiniQmax stats table
-    ratios  = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax'],
-                                     ['miniQmax', 'Qlearning'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )[::-1]
+    # ratios  = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax'],
+    #                                  ['miniQmax', 'Qlearning'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )[::-1]
 
-    ratios += fightDuels([QM, QM], [ ['minimax', 'miniQmax' ],
-                                     ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )[::-1]
+    # ratios += fightDuels([QM, QM], [ ['minimax', 'miniQmax' ],
+    #                                  ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )[::-1]
 
-    ratios += fightDuels([QM, QM], [ ['miniQmax', 'ideal'],
-                                     ['ideal', 'miniQmax'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )[::-1]
+    # ratios += fightDuels([QM, QM], [ ['miniQmax', 'ideal'],
+    #                                  ['ideal', 'miniQmax'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )[::-1]
     
-    cols = ["P1 win",  "draw", "P1 loss"]
+    # cols = ["P1 win",  "draw", "P1 loss"]
     
-    rows = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn',
-            'minimax vs miniQmax', 'miniQmax vs minimax',
-            'miniQmax vs Ideal', 'Ideal vs miniQmax')
-    
-    table = pd.DataFrame(ratios, columns = cols, index = rows)
-    print table
-    print "total time: " , time() - start
-    # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
+    # rows = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn',
+    #         'minimax vs miniQmax', 'miniQmax vs minimax',
+    #         'miniQmax vs Ideal', 'Ideal vs miniQmax')
 
-    ## Comparison with random
-    columns = ('Random vs miniQmax', 'miniQmax vs random')
-    ratios  = fightDuels([QM, QM], [ ['random', 'miniQmax' ],
-                                     ['miniQmax', 'random' ] ], size, n_games = 100 , p1ds = [2,3], p2ds = [3,2] )
-    ratios = np.transpose(ratios)
-    graphStats(columns, ratios, 'MiniQmax vs Random {}x{}'.format(size,size))
+    # table = pd.DataFrame(ratios, columns = cols, index = rows)
+    # print table
+    # print "total time: " , time() - start
+    # # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
+
+    # ## Comparison with random
+    # columns = ('Random vs miniQmax', 'miniQmax vs random')
+    # ratios  = fightDuels([QM, QM], [ ['random', 'miniQmax' ],
+    #                                  ['miniQmax', 'random' ] ], size, n_games = 100 , p1ds = [2,3], p2ds = [3,2] )
+    # ratios = np.transpose(ratios)
+    # graphStats(columns, ratios, 'MiniQmax vs Random {}x{}'.format(size,size))
 
     #####
     #save QM
-    with open("../mulit3x3_600.pickle", 'wb') as f:
-        QM = pickle.dump(QM, f,  pickle.HIGHEST_PROTOCOL)    
+    # with open("../mulit3x3_600.pickle", 'wb') as f:
+    #     QM = pickle.dump(QM, f,  pickle.HIGHEST_PROTOCOL)
+    
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
@@ -486,28 +485,21 @@ def run():
 ##################### ##################### ##################### #####################
 # Revenge of Lucky_Q Revenge of Lucky_Q Revenge of Lucky_Q Revenge of Lucky_Q 
 
-    # print "Revenge of Lucky"
+    # # print "Revenge of Lucky"
     # size = 3
     # with open("../lucky_3x3_Q.pickle", 'rb') as f:
     #     QM = pickle.load(f)
 
-
     # ratios  = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax' ],
-    #                                  ['miniQmax', 'Qlearning'] ], size, n_games = 10, p1ds = [2,3], p2ds = [3,2] )
+    #                                  ['miniQmax', 'Qlearning'] ], size, n_games = 10, p1ds = [2,3], p2ds = [3,2] )[::-1]
 
     # ratios += fightDuels([QM, QM], [ ['minimax', 'miniQmax' ],
-    #                                  ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )
+    #                                  ['miniQmax', 'minimax' ] ], size, n_games = 10,  p1ds = [2,3], p2ds = [3,2] )[::-1]
 
-    
-    # ratios = np.transpose(ratios)
-    # cols  = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn', 'minimax vs miniQmax', 'miniQmax vs minimax')
-    # rows = ["win",  "draw","loss"]
+    # rows  = ('Qlearning vs miniQmax', 'miniQmax vs Qlearn', 'minimax vs miniQmax', 'miniQmax vs minimax')
+    # cols = ["P1 win", "draw","P1 loss"]
     # table = pd.DataFrame(ratios,columns = cols, index = rows)
     # print table 
-    # from IPython.display import display
-    # display(table)
-    # ratios = np.transpose(ratios)
-    # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
 
     # ## Comparison with random
     # columns = ('Random vs miniQmax', 'miniQmax vs random')

@@ -129,21 +129,22 @@ class Strateegery(object):
         gs = self.game_state
         size = gs.size
         opponent = [p for p in gs.players if p.mark is not player.mark][0]
-
-        if self.isLeaf(sequence, player) or depth == 0:
+        
+        # evaluate is called if node is leaf or depth reached
+        if self.isLeaf(sequence, player) or depth == 0:  
             return evaluate(sequence, player)
 
-        valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ]
+        valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ] #all legal moves
         ## Max
         if  player == gs.players[0]:
             v = Min
             for i in valid_i:
                 child_seq = sequence[:] + [(i, player.mark)]
                 v_c = self.minimax(child_seq, depth-1, v, Max, opponent, evaluate)
-                if v_c > v:
-                    v = v_c
-                if v > Max:
-                    return Max
+                if v_c > v:  
+                    v = v_c     #Update our current maximum if minimax returns with a larger value
+                if v > Max:  
+                    return Max  #
             return v
         ## Min
         else:
@@ -203,7 +204,7 @@ class Strateegery(object):
                 if full_line != []:
                     if debug:
                         print "win/block", i, player.mark, strategy
-                    return i, player.mark        
+                    return i, player.mark 
 
         if gs.step >= 4*size - 9:  # Check only when game is sufficiently developed
 
