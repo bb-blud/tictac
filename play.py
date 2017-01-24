@@ -396,30 +396,37 @@ def run():
     # Q-Learning Training
     #Seed Q with initial random games
 
-    ts = [70, 1000, 1000, 1000]
-    start = time()    
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
-    
-    # player 2 learning against a random player 1
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
-    
-    # Now player 1 learning against a random player 2
-    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
-    
-    # Have two agents learn against  each other
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
-    print "Training time: " , time() - start 
-
-    # Using Multiprocess
-    # Seed Q with initial random games
-    # start = time()
-    # QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=7, batch_size=100)
+    # ts = [70, 1000, 1000, 1000]
+    # start = time()    
+    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
     
     # # player 2 learning against a random player 1
-    # QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=10, batch_size=300)
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
     
     # # Now player 1 learning against a random player 2
-    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=10, batch_size=300)
+    # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
+    
+    # # Have two agents learn against  each other
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+    # print "Training time: " , time() - start 
+
+    #####################
+    # Using Multiprocess
+    
+    # Seed Q with initial random games
+    start = time()
+    QM = trainQ(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=15, batch_size=100)
+    
+    # player 2 learning against a random player 1
+    QM = trainQ(setupGame(QM, size, ['random', 'Qlearning'], learning=True),  runs=20, batch_size=300)
+    
+    # Now player 1 learning against a random player 2
+    QM = trainQ(setupGame(QM, size, ['Qlearning', 'random'], learning=True), runs=20, batch_size=300)
+    
+    # Have two agents learn against  each other
+    QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True),runs=20, batch_size=300)
+    print "Training time: " , time() - start
+
 
     ########################
     # display "quality" table
@@ -468,7 +475,10 @@ def run():
     ratios = np.transpose(ratios)
     graphStats(columns, ratios, 'MiniQmax vs Random {}x{}'.format(size,size))
 
-    
+    #####
+    #save QM
+    with open("../mulit3x3_600.pickle", 'wb') as f:
+        QM = pickle.dump(QM, f,  pickle.HIGHEST_PROTOCOL)    
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
