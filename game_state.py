@@ -11,10 +11,10 @@ class Player(object):
 
 class QMap(object):
    
-    def __init__(self):
+    def __init__(self, gamma=0.42, alpha=0.1):
         self.Q = {}
-        self.gamma = 0.4
-        self.alpha = 0.8
+        self.gamma = gamma
+        self.alpha = alpha
     def visitQ(self, sequence):
         if not self.Q.get(sequence, False):
             self.Q[sequence] = 0
@@ -30,7 +30,7 @@ class QMap(object):
             winner = [p for p in players if p.is_winner][0]
             sgn = { players[0].mark : 1.0, players[1].mark : -1.0 }[winner.mark]
             
-            reward = sgn #* size**4 / n
+            reward = sgn * size**4 / n
             
             for i in range(1, len(game)):
                 sub_sequence = tuple(game[:i])

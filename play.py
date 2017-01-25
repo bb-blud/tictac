@@ -148,7 +148,7 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
             print
 
         if False not in (current == g for g in repeats) and check_convergence:
-            print "CONVERGENCE ON GAME NUMBER: ", game
+            print "CONVERGENCE ON GAME NUMBER: ", game, [p.policy for p in gs.players]
             is_converging = True
             break
         ## ##  ## ##
@@ -566,24 +566,58 @@ def run():
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
-    ######################
-    # Q-Learning Training
+    ###################################
+    # Faux grid search for alpha gamma
     #Seed Q with initial random games
+    params = np.linspace(0.1, 0.9, 6)
+    ts = [70, 200, 200, 300]
+    start = time()
+    for alp in params:
+        for gam in params:
+            QM = QMap(gamma = gam, alpha=alp)
 
-    ts = [70, 1000, 1000, 2000]
-    start = time()    
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
-    
-    # player 2 learning against a random player 1
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
-    
-    # Now player 1 learning against a random player 2
-    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
-    
-    # Have two agents learn against  each other
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+            QM, tally, conv = playGames(setupGame(QM, size, ['random', 'random'],  learning=True), ts[0])
+
+            # player 2 learning against a random player 1
+            QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
+
+            # Now player 1 learning against a random player 2
+            QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
+
+            # Have two agents learn against  each other
+            QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+
+
+            tallies = []
+            lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
+            QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 30)#, check_convergence = False)
+            tallies.append([tally[l[1]] for l in lbls])
+            
+            QM, tally, conv = playGames(setupGame(QM, size, ['ideal','Qlearning']), 30)#, check_convergence = False)
+            tallies.append([tally[l[1]] for l in lbls])
+
+            QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 30)#, check_convergence = False)
+            tallies.append([tally[l[1]] for l in lbls])
+
+            QM, tally, conv = playGames(setupGame(QM, size, ['minimax', 'Qlearning']), 30)#, check_convergence = False)
+            tallies.append([tally[l[1]] for l in lbls])
+
+            QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 30)#, check_convergence = False)
+            tallies.append([tally[l[1]] for l in lbls])
+
+            quality_table = pd.DataFrame(tallies, columns=[l[0] for l in lbls],
+                                         index = ['Qlearning v ideal',
+                                                  'ideal v Qlearning',
+                                                  'Qlearning v minimax',
+                                                  'minimax v Qlearning',
+                                                  'Qlearning v Qlearning'])
+                                      
+            print "ALPHA: ", alp, "GAMMA: ", gam
+            print quality_table
+            print
+            
     print "Training time: " , time() - start
-    
+                
     # with open("../lucky_3x3_Q.pickle", 'rb') as f:
     #     QM = pickle.load(f)
 
