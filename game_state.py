@@ -11,7 +11,7 @@ class Player(object):
 
 class QMap(object):
    
-    def __init__(self, gamma=0.42, alpha=0.1):
+    def __init__(self, gamma=0.42, alpha=0.28):
         self.Q = {}
         self.gamma = gamma
         self.alpha = alpha
@@ -25,19 +25,19 @@ class QMap(object):
             reward = 0
         else:
             n = len(game)
-            alpha = self.alpha
+            alpha = 1#self.alpha 
             
             winner = [p for p in players if p.is_winner][0]
             sgn = { players[0].mark : 1.0, players[1].mark : -1.0 }[winner.mark]
             
-            reward = sgn * size**4 / n
+            reward = sgn#* size**4 / n
             
             for i in range(1, len(game)):
                 sub_sequence = tuple(game[:i])
 
-                # Temporal-difference method
+                # Temporal-difference
                 V = self.Q[sub_sequence]
-                X = sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #reward * self.gamma**(i-1)
+                X = reward #* self.gamma**(i-1)#sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #
                 
                 self.Q[sub_sequence] = (1-alpha) * V + alpha * X
 

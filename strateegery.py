@@ -111,10 +111,10 @@ class Strateegery(object):
         gs = self.game_state
         sgn = {gs.players[0].mark : 1.0, gs.players[1].mark : -1.0}[player.mark]
         Q = gs.QM.Q
-        val = Q.get(tuple(sequence), None)
-        if val is None:
-            #gs.QM.Q[tuple(sequence)] = sgn * 0.033
-            return sgn * 0.01
+        val = Q.get(tuple(sequence), 0)
+        # if val is None:
+        #     #gs.QM.Q[tuple(sequence)] = sgn * 0.033
+        #     return sgn * 0.01
         return val 
     #################
 
