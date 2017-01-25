@@ -511,30 +511,37 @@ def run():
 
     #######################
     # MiniQmax stats table
-    
-    ratios  = fightDuels([QM, QM], [ ['random', 'random'],
-                                     ['Qlearning', 'Qlearning'] ], size, n_games = 1000 )
-    
-    ratios += fightDuels([QM, QM], [ ['Qlearning', 'miniQmax'],
+    ratios = fightDuels([QM, QM], [ ['Qlearning', 'miniQmax'],
                                      ['miniQmax', 'Qlearning'] ], size, n_games = 100, p1ds = [2,3], p2ds = [3,2] )
 
-    ratios += fightDuels([QM, QM], [ ['minimax', 'miniQmax' ],
-                                     ['miniQmax', 'minimax' ] ], size, n_games = 40,  p1ds = [2,3], p2ds = [3,2] )
+    ratios += fightDuels([QM, QM], [ ['Qlearning', 'Qlearning'],
+                                     ['random', 'random'] ], size, n_games = 500 )
+
+    ratios += fightDuels([QM, QM], [ ['miniQmax', 'minimax' ],
+                                     ['minimax', 'miniQmax' ] ], size, n_games = 40,  p1ds = [2,3], p2ds = [3,2] )
 
     ratios += fightDuels([QM, QM], [ ['miniQmax', 'ideal'],
                                      ['ideal', 'miniQmax'] ], size, n_games = 40, p1ds = [2,3], p2ds = [3,2] )
     
     cols = ["P1 win",  "draw", "P1 loss"]
-    
-    rows = ('random vs random', 'Qlearning vs Qlearning',
-            'Qlearning vs miniQmax', 'miniQmax vs Qlearn',
-            'minimax vs miniQmax', 'miniQmax vs minimax',
-            'miniQmax vs Ideal', 'Ideal vs miniQmax')
+    rows = ('Qlearning vs miniQmax',
+            'miniQmax vs Qlearn',
+            
+            'Qlearning vs Qlearning',
+            'random vs random',
+            
+            'miniQmax vs minimax',
+            'minimax vs miniQmax',
+            
+            'miniQmax vs ideal',
+            'ideal vs miniQmax')
 
     exploreQ(QM,2)
 
     table = pd.DataFrame(ratios, columns = cols, index = rows)
     print table
+    table.plot.barh(stacked=True,colormap='Greens')
+    plt.show()
     print "total time: " , time() - start
 
     # ## Comparison with random
