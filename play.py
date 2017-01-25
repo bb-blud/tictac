@@ -1,9 +1,13 @@
 from time import time
 from collections import deque
+import pickle
+
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
-import pickle
+import matplotlib
+matplotlib.style.use('ggplot')
 
 from game_board import GameBoard
 from game_state import Player, GameState, QMap
@@ -290,7 +294,6 @@ def run():
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
 
-
     # # #########################
     # Ideal policy stats 3x3
     # columns  = ('P1 actual counts', 'Ideal as player1', 'P2 actual counts', 'Ideal as player 2')
@@ -339,7 +342,58 @@ def run():
     # print time() - start        
     # ratios = np.transpose(ratios)
     # graphStats(columns, ratios, 'Minimax vs Ideal comparison 3x3')
+
+################################################################################## ###########################################
+# END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
+
+
+#####################################################
+# "lucky" Q-learning  vs Ideal and minimax TAble Stats
+
+    # size = 3
+    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
+    #     QM = pickle.load(f)      
+        
+    # columns  = ('Ideal vs lucky_Q', 'lucky_Q vs Ideal', 'random vs Ideal', 'Ideal vs random')
     
+    # ratios = fightDuels([QM, QM, QM, QM, QMap()],
+    #                     [ ['ideal', 'Qlearning'  ],
+    #                       ['Qlearning', 'ideal'  ],
+    #                       ['minimax', 'Qlearning'],
+    #                       ['Qlearning', 'minimax'],
+    #                       ['random', 'random'    ]], size, n_games = 10 )
+ 
+    
+    # cols = ["P1 win",  "draw", "P1 loss"]
+    
+    # rows = ('ideal vs lucky_Q', 'lucky_Q vs ideal',
+    #         'minimax vs lucky_Q', 'lucky_Q vs minimax',
+    #         'random vs random')
+    
+    # table = pd.DataFrame([row[::-1] for row in ratios], columns = cols, index = rows)
+    # table.to_csv("../lucky_table.csv")
+    
+    # ######
+    # # lucky v Random
+    # columns  = ('Random vs Qlearning',  'Qlearning vs Random', 'Random vs Random', '"Perfect" random')
+    
+    # randos = fightDuels([QM, QMap(), QMap()], [ ['random', 'Qlearning'],
+    #                                           ['Qlearning', 'random'],
+    #                                            ['random', 'random' ]  ], size, n_games = 100, p1ds = [2,3,2], p2ds = [3,2,2] )
+    
+    
+    # rows = ('random vs lucky_Q',
+    #         'lucky_Q vs random',
+    #         'random vs random')
+    # table = pd.DataFrame([row[::-1] for row in randos], columns = cols, index = rows)
+    # table.to_csv("../lucky_random_table.csv")
+    # dd = pd.DataFrame(np.random.randn(10, 10)).applymap(abs)
+    # dd = dd.cumsum()
+    # print dd
+    # #plt.figure()
+    # dd.plot.bar(colormap='Greens')
+    #parallel_coordinates(data, 'Name', colormap='gist_rainbow')
+
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
@@ -395,9 +449,9 @@ def run():
     # Q-Learning Training
     #Seed Q with initial random games
 
-    ts = [70, 1000, 1000, 20000]
-    start = time()    
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
+    # ts = [70, 1000, 1000, 20000]
+    # start = time()    
+    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
     
     # player 2 learning against a random player 1
     # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
@@ -406,8 +460,8 @@ def run():
     # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
     
     # Have two agents learn against  each other
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
-    print "Training time: " , time() - start 
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+    # print "Training time: " , time() - start 
 
     #####################
     # Using Multiprocess
@@ -428,21 +482,21 @@ def run():
 
     ########################
     # display "quality" table
-    tallies = []
-    lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 30, check_convergence = False)
-    tallies.append([tally[l[1]] for l in lbls])
+    # tallies = []
+    # lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 30, check_convergence = False)
+    # tallies.append([tally[l[1]] for l in lbls])
 
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 30, check_convergence = False)
-    tallies.append([tally[l[1]] for l in lbls])
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 30, check_convergence = False)
+    # tallies.append([tally[l[1]] for l in lbls])
 
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 30, check_convergence = False)
-    tallies.append([tally[l[1]] for l in lbls])
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 30, check_convergence = False)
+    # tallies.append([tally[l[1]] for l in lbls])
 
-    quality_table = pd.DataFrame(tallies, columns=[l[0] for l in lbls],
-                                 index = ['Qlearning v ideal', 'Qlearning v minimax', 'Qlearning v Qlearning'])
-    print quality_table
-    print
+    # quality_table = pd.DataFrame(tallies, columns=[l[0] for l in lbls],
+    #                              index = ['Qlearning v ideal', 'Qlearning v minimax', 'Qlearning v Qlearning'])
+    # print quality_table
+    # print
 
     #######################
     # MiniQmax stats table
@@ -464,9 +518,9 @@ def run():
     # table = pd.DataFrame(ratios, columns = cols, index = rows)
     # print table
     # print "total time: " , time() - start
-    # # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
+    # graphStats(columns, ratios, 'MiniQmax Comparison {}x{}'.format(size,size))
 
-    # ## Comparison with random
+    ## Comparison with random
     # columns = ('Random vs miniQmax', 'miniQmax vs random')
     # ratios  = fightDuels([QM, QM], [ ['random', 'miniQmax' ],
     #                                  ['miniQmax', 'random' ] ], size, n_games = 100 , p1ds = [2,3], p2ds = [3,2] )
@@ -512,43 +566,39 @@ def run():
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
-    
-    # print "miniQmax d2"
-    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True,d1=3), 50)
-    # print "miniQmax d3"
-    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True,d2=3), 50)
-    # print "miniQmax d4"    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True,d1=4,d2=4), 20)
-    
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 10)
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['Qlearning', 'Qlearning'],learning=True), 1000)
-    
-    
-    # print "Starting Q v Q training"    
-    # print time() - start    
-    # # Have two agents learn against each other
-    # QM = trainQ(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True), runs=10, batch_size=600)
-    # print time() - start
-    
-    # print "Starting mQm v mQm "
-    # print time() - start    
-    # QM = trainQ(setupGame(QM, size, ['miniQmax', 'miniQmax'], learning=True), runs=10, batch_size=240)
-    # print time() - start
-    
+    ######################
+    # Q-Learning Training
+    #Seed Q with initial random games
 
-    #miniQMax
-    # print "Starting minQmax"
-    # Q = QM.Q
-    # M = max(len(seq) for seq in Q.keys())
-    # for k in range(1,M/3):
-    #     print "Explored Moves at step", k
-    #     explored = sorted( [(seq , Q[seq]) for seq in Q if len(seq) == k], key=lambda t:t[1] )
+    ts = [70, 1000, 1000, 2000]
+    start = time()    
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), ts[0])
+    
+    # player 2 learning against a random player 1
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
+    
+    # Now player 1 learning against a random player 2
+    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
+    
+    # Have two agents learn against  each other
+    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+    print "Training time: " , time() - start
+    
+    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
+    #     QM = pickle.load(f)
+
+    ##### Explore Q #####
+    Q = QM.Q
+    M = max(len(seq) for seq in Q.keys())
+    for k in range(1,M/3):
+        print "Explored Moves at step", k
+        explored = sorted( [(seq , Q[seq]) for seq in Q if len(seq) == k], key=lambda t:t[1] )
         
-    #     for seq, val  in explored:
-    #         print seq, val
-    #     print
+        for seq, val  in explored:
+            print seq, val
+        print
 
-
+        
     # with open("../mQm_3x3.pickle", 'wb') as f:
     #     pickle.dump([ts, QM], f,  pickle.HIGHEST_PROTOCOL)
 
@@ -556,53 +606,13 @@ def run():
     # #     #lucky_Q = pickle.load(f)
     # #     QM = pickle.load(f)
         
-    # print "Start Qlearn v minQMax"
-    # start = time ()    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'miniQmax'], d2=3), 100 )
-    # print tally  , time() -start
-    # print
-    
-    # print "Start minQmax v Qlearn"
-    # start = time ()    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'Qlearning'], d1=3), 100)
-    # print tally  , time() -start
-    # print
-    
-    # print "Start miniQmax v minimax"
-    # start = time ()    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'minimax'], d1=3), 10)
-    # print tally  , time() -start
-    # print
-    
-    # print "Start minimax v minQMax"
-    # start = time ()    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['minimax', 'miniQmax'], d2=3), 10)
-    # print tally  , time() -start
-    # print
-    
-    # print "Start miniQmax v random"
-    # start = time ()    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['miniQmax', 'random'], d1=3), 100)
-    # print tally  , time() -start    
-    # print
-    
-    # print "Start random v miniQmax"
-    # start = time ()    
-    # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'miniQmax'], d2=3), 100)
-    # print tally  , time() -start
-    # print
-    
-    # print "Start random v random"
-    # start = time ()
-    # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'random']), 100)
-    # print tally  , time() -start
-    # 0.6594 : 0.31884 : 0.0217
 
-    # with open("../lucky_3x3_Q.pickle", 'rb') as f:
-    #     QM = pickle.load(f)
+
 
 
     
+
+
 
 
     ##################
