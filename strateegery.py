@@ -68,8 +68,8 @@ class Strateegery(object):
             #print 'uncharted'
             return random.choice(uncharted_i), player.mark
         
-        if gs.learning and random.random() > threshold :
-            return random.choice(valid_indices) , player.mark # return a random move while training to break sinks
+        # if gs.learning and random.random() > threshold :
+        #     return random.choice(valid_indices) , player.mark # return a random move while training to break sinks
 
         # Q index and values of the future sequences that could be legally taken
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
