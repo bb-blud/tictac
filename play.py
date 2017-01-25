@@ -496,21 +496,21 @@ def run():
 
     ########################
     # display "quality" table
-    tallies = []
-    lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 10, check_convergence = False)
-    tallies.append([tally[l[1]] for l in lbls])
+    # tallies = []
+    # lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 10, check_convergence = False)
+    # tallies.append([tally[l[1]] for l in lbls])
 
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 10, check_convergence = False)
-    tallies.append([tally[l[1]] for l in lbls])
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'minimax']), 10, check_convergence = False)
+    # tallies.append([tally[l[1]] for l in lbls])
 
-    QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 10, check_convergence = False)
-    tallies.append([tally[l[1]] for l in lbls])
+    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning']), 10, check_convergence = False)
+    # tallies.append([tally[l[1]] for l in lbls])
 
-    quality_table = pd.DataFrame(tallies, columns=[l[0] for l in lbls],
-                                 index = ['Qlearning v ideal', 'Qlearning v minimax', 'Qlearning v Qlearning'])
-    print quality_table
-    print
+    # quality_table = pd.DataFrame(tallies, columns=[l[0] for l in lbls],
+    #                              index = ['Qlearning v ideal', 'Qlearning v minimax', 'Qlearning v Qlearning'])
+    # print quality_table
+    # print
 
     #######################
     # MiniQmax stats table
@@ -607,7 +607,8 @@ def run():
     # Faux grid search for alpha gamma
     #Seed Q with initial random games
     params = np.linspace(0.1, 0.9, 6)
-    ts = [70, 200, 200, 300]
+    #ts = [70, 200, 200, 300]
+    ts = [70, 1000, 1000, 1000]
     start = time()
     for alp in params:
         for gam in params:
@@ -659,7 +660,7 @@ def run():
     # #     QM = pickle.load(f)
 
     # ##### Explore Q #####
-    # exploreQ(QM,2)
+    exploreQ(QM,2)
 
         
     # with open("../mQm_3x3.pickle", 'wb') as f:
