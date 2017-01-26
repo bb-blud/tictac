@@ -11,7 +11,7 @@ class Player(object):
 
 class QMap(object):
    
-    def __init__(self, gamma=0.42, alpha=0.28):
+    def __init__(self, gamma=0.1, alpha=0.1):
         self.Q = {}
         self.gamma = gamma
         self.alpha = alpha
