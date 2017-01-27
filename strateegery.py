@@ -126,17 +126,15 @@ class Strateegery(object):
     def miniQMax(self, sequence, player):
         gs = self.game_state
         sgn = {gs.players[0].mark : 1.0, gs.players[1].mark : -1.0}[player.mark]
-        return sgn
-        # Q = gs.QM.Q
-        # if player.use_inner_Q: 
-        #     Q = player.inner_Q.Q 
-            
-        # val = Q.get(tuple(sequence), None)
-        # if val is None:
-        #     #gs.QM.Q[tuple(sequence)] = sgn * 0.033
-        #     return sgn * 0.01
+
+        Q = gs.QM.Q
         
-        # return val 
+        val = Q.get(tuple(sequence), None)
+        if val is None:
+            #gs.QM.Q[tuple(sequence)] = sgn * 0.033
+            return sgn * 0.01
+        
+        return val 
     #################
 
     def isLeaf(self, sequence, player):
