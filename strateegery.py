@@ -29,6 +29,22 @@ class Strateegery(object):
         return n_ranked
 
     ###########################################################
+    # Human player 
+    ###########################################################    
+    def humanMove(self, player):
+        gs = self.game_state
+        choosing = True
+        
+        gs.printGrid(gs.makeGrid(gs.game_sequence))
+
+        while choosing:
+            index = input("type index of your next move: ")            
+            if index in range(gs.size**2) and gs.validMove(index, gs.game_sequence):
+                return index, player.mark
+            else:
+                print "Thats an invalid move"
+                     
+    ###########################################################
     # Random strategy
     ###########################################################
     def randomMove(self, player):
@@ -110,12 +126,17 @@ class Strateegery(object):
     def miniQMax(self, sequence, player):
         gs = self.game_state
         sgn = {gs.players[0].mark : 1.0, gs.players[1].mark : -1.0}[player.mark]
-        Q = gs.QM.Q
-        val = Q.get(tuple(sequence), None)
-        if val is None:
-            #gs.QM.Q[tuple(sequence)] = sgn * 0.033
-            return sgn * 0.01
-        return val 
+        return sgn
+        # Q = gs.QM.Q
+        # if player.use_inner_Q: 
+        #     Q = player.inner_Q.Q 
+            
+        # val = Q.get(tuple(sequence), None)
+        # if val is None:
+        #     #gs.QM.Q[tuple(sequence)] = sgn * 0.033
+        #     return sgn * 0.01
+        
+        # return val 
     #################
 
     def isLeaf(self, sequence, player):

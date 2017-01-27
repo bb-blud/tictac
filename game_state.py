@@ -294,7 +294,7 @@ class GameState(object):
     def printGrid(self, grid):
         for row in grid:
             print row
-
+    
     def printGame(self):
         self.printGrid(self.makeGrid(self.game_sequence))
         print "horizontals: ", self.lines['Horizontal']
@@ -303,6 +303,19 @@ class GameState(object):
         print "d-neg: ", self.lines['D-neg']                     
         print
         
+    def exploreQ(self,d):
+        Q = self.QM.Q
+        if Q == {}:
+            print Q
+        else:
+            M = max(len(seq) for seq in Q.keys())
+            for k in range(1,M/d):
+                print "Explored Moves at step", k
+                explored = sorted( [(seq , Q[seq]) for seq in Q if len(seq) == k], key=lambda t:t[1] )
+
+                for seq, val  in explored:
+                    print seq, val
+                print        
 ###########################################################
 #           Testing functions and code logic
 ###########################################################
