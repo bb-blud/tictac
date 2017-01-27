@@ -102,14 +102,17 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
     is_converging = False
-
+    
     ##### Initialize #####
     gs = game_state
+    
     #### Crude convergence test ####
     repeats = deque()
     if check_convergence:
-        for game in range(8):
-
+        buffer_size = 10
+        if gs.learning:
+            buffer_size = 3*n_games
+        for game in range(buffer_size):
             while not gs.game_finished:
                 gs.takeStep()
                 if debug:
@@ -118,8 +121,6 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
             gs.resetGame()
 
     ######### Play Games #########
-    bads = set() # debug
-    
     current = []
     for game in range(n_games):
 
@@ -154,14 +155,9 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
             is_converging = True
             break
         ## ##  ## ##
-
-        # if debug:
-        #     if gs.players[0].is_winner:
-        #         bads.add(tuple(gs.game_sequence))
-        gs.resetGame()
         
-        # for b in bads:
-        #     print b
+        gs.resetGame()
+
     
     return gs.QM, tally, is_converging
 
@@ -365,14 +361,42 @@ def run():
 ##################################
 # Final Comparison miniQmax centric
 #################################
-    ranQ, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 80)
-    ranQ, tally, conv = playGames(setupGame(ranQ  , size, ['random', 'miniQmax'],  learning=True), 100)
-    ranQ, tally, conv = playGames(setupGame(ranQ  , size, ['miniQmax', 'random'],  learning=True), 100)
-    ranQ, tally, conv = playGames(setupGame(ranQ  , size, ['miniQmax', 'miniQmax'],  learning=True), 100)
-
-    size =3
     with open("../newlucky.pickle") as f:
         luckyQ = pickle.load(f)
+
+    def dislodger(pipeQ, size, policies, d1, d2, itrs):
+        done = False
+
+        while not done:
+            pipeQ, tally, conv = playGames(setupGame(pipeQ, size, policies, d1=d1, d2=d2, learning=True), itrs)
+            itrs -= sum(tally[o] for o in tally)
+            if itrs <1:
+                break
+            if conv:# and d2>d1:
+                pipeQ, _, _ = playGames(setupGame(pipeQ , size, ['random','random'], learning=True), 5)
+                print "DISLODGING", "depth: ",  d1, itrs
+            # elif conv:
+            #     done = True
+                
+        return QM
+    
+    def pipeTrain(pipeQ, lower, higher, itrs, depth=2):
+        pipeQ = dislodger(pipeQ, size, [lower, higher], depth, depth+1,  itrs[0])
+        pipeQ = dislodger(pipeQ, size, [higher,lower ], depth+1, depth,  itrs[1])
+        pipeQ = dislodger(pipeQ, size, [higher, higher],depth+1, depth+1,itrs[2]) 
+        return pipeQ
+        
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 300)
+    QM = pipeTrain(QM, 'random', 'Qlearning', [20, 20, 20])
+    QM = pipeTrain(QM, 'Qlearning','miniQmax', [20,20,20], depth = 1)
+    QM = pipeTrain(QM, 'miniQmax','miniQmax', [20, 20,20], depth = 1)
+    # QM = pipeTrain(QM, 'miniQmax','miniQmax', [200, 100,100], depth = 2)
+   # QM = pipeTrain(QM, 'Qlearning','miniQmax', [200,80,300], depth = 2)
+
+
+    exploreQ(QM,3)
+    size =3
+
 
     duels = [['miniQmax', 'ideal' ],
              ['miniQmax', 'minimax'],
@@ -389,19 +413,19 @@ def run():
     start = time()
     ratios = []
     ## As Player 1
-    ratios.append(getRatios(setupGame(ranQ, size, duels[0], d1=3              ), 100))
-    ratios.append(getRatios(setupGame(ranQ, size, duels[1], d1=3, d2=2        ), 100))
-    ratios.append(getRatios(setupGame(ranQ, size, duels[2], d1=3, p2QM=luckyQ ), 100))
-    ratios.append(getRatios(setupGame(ranQ, size, duels[3], d1=3              ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[0], d1=3              ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[1], d1=3, d2=2        ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[2], d1=3, p2QM=luckyQ ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[3], d1=3              ), 100))
 
     # Random
-    ratios.append(getRatios(setupGame(ranQ, size, duels[4],                   ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[4],                   ), 100))
     
     ## As player 2
-    ratios.append(getRatios(setupGame(ranQ, size, duels[5], d2=3              ), 100))
-    ratios.append(getRatios(setupGame(ranQ, size, duels[6], d2=3, p1QM=luckyQ ), 100))
-    ratios.append(getRatios(setupGame(ranQ, size, duels[7], d1=2, d2=3        ), 100))
-    ratios.append(getRatios(setupGame(ranQ, size, duels[8], d2=3              ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[5], d2=3              ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[6], d2=3, p1QM=luckyQ ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[7], d1=2, d2=3        ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[8], d2=3              ), 100))
 
     
     print "total time: ", time() - start
@@ -410,8 +434,8 @@ def run():
     rows = [r[0] +' v '+r[1] for r in duels]
     fintable = pd.DataFrame(ratios, columns = cols, index=rows)
     #fintable.to_csv('../"miniQmax_fin.csv')
-    fintable.plot.barh(colormap='Greens', stacked=True)
-    plt.show()
+    #fintable.plot.barh(colormap='Greens', stacked=True)
+    #plt.show()
     print fintable
 
 ################################################################################## ###########################################
