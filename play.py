@@ -367,17 +367,16 @@ def run():
         luckyQ = pickle.load(f)
 
     def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
-        pipeQ1, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth),  itrs[0])
-        pipeQ2, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth),  itrs[1])
-        pipeQ3, _, _ = playGames(setupGame(pipeQ, size, [higher, higher],learning=True,
-                                                            p1QM=pipeQ1, p2QM=pipeQ2, d1=depth, d2=depth), itrs[2])
+        pipeQ, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth-1, d2=depth), itrs[0])
+        pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth-1), itrs[1])
+        pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth, d2=depth),   itrs[2])
         return pipeQ
 
     
     start = time()
     QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1000)
     QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
-    # QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 1)
+    QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
     # QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[500, 500, 500], depth = 2)
     #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
     # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 1)
