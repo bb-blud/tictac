@@ -104,53 +104,73 @@ class Strateegery(object):
     ###########################################################
     # MiniMax alpha-beta pruning and supporting functions
     ###########################################################
-    def minimaxMeasure(self, sequence, player):
+    def minimaxMeasure(self, sequence, player, isleaf):
         gs = self.game_state
         size = self.game_state.size
-        measure = 0
-        
-        # if gs.isTie(sequence):  # Checking for a tie slows minimax very slightly and
-        #     return 0            # it did not seem to improve performance
 
-        for n in range(1,size):
-            measure += n * len(self.linesOfRankN(n, sequence, gs.players[0]))
-        for n in range(1,size):
-            measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))
-
-        # reward max/min for a player win
-        sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
-        measure += sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))
-        return measure
+        if isleaf['tie']:
+            return 0
+        elif isleaf['end']:
+            # reward max/min for a player win
+            sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
+            return sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))
+        else:
+            measure = 0
+            for n in range(1,size):
+                measure += n * len(self.linesOfRankN(n, sequence, gs.players[0]))
+            for n in range(1,size):
+                measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))
+            return measure
 
     ##### miniQMax #####
-    def miniQMax(self, sequence, player):
+    def miniQMax(self, sequence, player, isleaf):
         gs = self.game_state
+        set_val = False
+        
         sgn = {gs.players[0].mark : 1.0, gs.players[1].mark : -1.0}[player.mark]
-
-        Q = gs.QM.Q
+        seq = tuple(sequence)
+        val = gs.QM.Q.get(seq, None)
         
-        val = Q.get(tuple(sequence), None)
-        if val is None:
-            #gs.QM.Q[tuple(sequence)] = sgn * 0.033
-            return sgn * 0.01
+        if val is None and gs.learning:
+            set_val = True
+            
+        if isleaf['tie']:
+            if set_val:
+                gs.QM.Q[seq] = 0
+            return 0
         
-        return val 
+        elif isleaf['end']:
+            if set_val:
+                gs.QM.Q[seq] = sgn
+            return sgn
+        else:
+            if val is None:
+                if set_val:
+                    gs.QM.Q[tuple(sequence)] = sgn * 0.
+                return sgn*0.
+            else:
+                return val
+        
     #################
 
     def isLeaf(self, sequence, player):
         gs = self.game_state        
-        if gs.isTie(sequence):
-            return True
-        if len(self.linesOfRankN(gs.size, sequence, player)) > 0:  # Winning line game over
-            return True
-        
+
+        return {
+            'tie': gs.isTie(sequence),
+            
+            # There is a line of length size game over
+            'end': len(self.linesOfRankN(gs.size, sequence, player)) > 0} 
+    
     def minimax(self, sequence, depth, Min, Max, player, evaluate):
         gs = self.game_state
         size = gs.size
         opponent = [p for p in gs.players if p.mark is not player.mark][0]
-
-        if self.isLeaf(sequence, player) or depth == 0:
-            return evaluate(sequence, player)
+        
+        isleaf = self.isLeaf(sequence,player)
+        
+        if isleaf['tie'] or isleaf['end'] or depth == 0:
+            return evaluate(sequence, player, isleaf)
 
         valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ]
         ## Max
@@ -210,6 +230,10 @@ class Strateegery(object):
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
         opponent = gs.otherPlayer()
 
+        # Corner opening move tends to be stronger, hardcoded here
+        if gs.step == 1:
+            return random.choice([0,size-1,size**2-1,size**2-size]), player.mark
+                                 
         # 1st priority, Block opponent from winning or win game                                                     
         # 
         for strategy in ['gain', 'block']:

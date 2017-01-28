@@ -367,24 +367,25 @@ def run():
         luckyQ = pickle.load(f)
 
     def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
-        pipeQ1, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth+1),  itrs[0])
-        pipeQ2, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth+1, d2=depth),  itrs[1])
+        pipeQ1, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth),  itrs[0])
+        pipeQ2, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth),  itrs[1])
         pipeQ3, _, _ = playGames(setupGame(pipeQ, size, [higher, higher],learning=True,
-                                                            p1QM=pipeQ1, p2QM=pipeQ2, d1=depth+1, d2=depth+1), itrs[2])
+                                                            p1QM=pipeQ1, p2QM=pipeQ2, d1=depth, d2=depth), itrs[2])
         return pipeQ
 
     
     start = time()
     QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1000)
-    QM = pipeTrain(QM,size, 'random', 'Qlearning', [1000, 1000, 1000])
-    QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[400, 200, 200], depth = 1)
+    QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
+    # QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 1)
+    # QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[500, 500, 500], depth = 2)
+    #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
     # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 1)
     # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 2)
     #QM = pipeTrain(luckyQ,size, 'Qlearning','miniQmax', [40,20,20], depth = 2)    
     print "trainin time" , time()-start
 
     exploreQ(QM, 3)
-
     duels = [['miniQmax', 'ideal' ],
              ['miniQmax', 'minimax'],
              ['miniQmax', 'Qlearning'],
@@ -395,7 +396,7 @@ def run():
              ['random', 'miniQmax'],
              ['Qlearning','miniQmax'],
              ['minimax', 'miniQmax'],
-             ['ideal', 'miniQmax'] ]
+             ['ideal', 'miniQmax' ] ]
 
     start = time()
     ratios = []
@@ -421,15 +422,25 @@ def run():
     cols = ["P1 win",  "draw", "P1 loss"]
     rows = [r[0] +' v '+r[1] for r in duels]
     fintable = pd.DataFrame(ratios, columns = cols, index=rows)
-    #fintable.to_csv('../"miniQmax_fin.csv')
+    fintable.to_csv('../blankQ.csv')#"miniQmax_fin.csv')
     #fintable.plot.barh(colormap='Greens', stacked=True)
     #plt.show()
     print fintable
-    playGames(setupGame(luckyQ, 3, ['human', 'miniQmax'], d2=3), 2,check_convergence=False, debug=True)
+    playGames(setupGame(luckyQ, 3, ['human', 'miniQmax'], d1=2), 2,check_convergence=False, debug=True)
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
-
+    duels = [['Qlearning', 'ideal' ],
+             ['Qlearning', 'minimax'],
+             ['Qlearning', 'miniQmax'],
+             ['Qlearning', 'random'],
+             
+             ['random', 'random'],
+             
+             ['random', 'Qlearning'],
+             ['miniQmax','Qlearning'],
+             ['minimax', 'Qlearning'],
+             ['ideal', 'Qlearning' ] ]
 #######################################################
 # Compare Qlearning (lucky) with miniQmax different Qs
 #
