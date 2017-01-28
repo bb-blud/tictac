@@ -37,7 +37,7 @@ class QMap(object):
 
                 # Temporal-difference
                 V = self.Q[sub_sequence]
-                X = sum([ reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #reward * self.gamma**(i-1)#
+                X = sum([reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #(n-i) * reward * self.gamma**(i-1)#
                 
                 self.Q[sub_sequence] = (1-alpha) * V + alpha * X
 

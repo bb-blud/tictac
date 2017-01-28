@@ -110,8 +110,8 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
     repeats = deque()
     if check_convergence:
         buffer_size = 10
-        if gs.learning:
-            buffer_size = 3*n_games
+        # if gs.learning:
+        #     buffer_size = 3*n_games
         for game in range(buffer_size):
             while not gs.game_finished:
                 gs.takeStep()
@@ -262,10 +262,10 @@ def exploreQ(QM,d):
 def run():
 
 
-    with open("../pipeQ.pickle", 'rb') as f:
-        pipeQ = pickle.load(f)
-    gs = setupGame(pipeQ, 3, ['miniQmax','ideal'],  d1=3)
-    playGames(gs, 1, check_convergence=False, debug=True)
+    # with open("../pipeQ.pickle", 'rb') as f:
+    #     pipeQ = pickle.load(f)
+    # gs = setupGame(pipeQ, 3, ['human','ideal'],  d1=3)
+    # playGames(gs, 1, check_convergence=False, debug=True)
 ##################################################################################
 # The sections below roughly follow the order of the IPython notebook  work along
 # uncomment to run from the terminal
@@ -366,38 +366,21 @@ def run():
     with open("../newlucky.pickle") as f:
         luckyQ = pickle.load(f)
 
-    def dislodger(pipeQ, size, policies, d1, d2, itrs):
-        done = False
-
-        while not done:
-            pipeQ, tally, conv = playGames(setupGame(pipeQ, size, policies, d1=d1, d2=d2, learning=True), itrs)
-            itrs -= sum(tally[o] for o in tally)
-            if itrs <1:
-                break
-            if conv:# and d2>d1:
-                pipeQ, _, _ = playGames(setupGame(pipeQ , size, ['random','random'], learning=True), 5)
-                print "DISLODGING", "depth: ",  d1, itrs
-            # elif conv:
-            #     done = True
-                
-        return QM
-    
-    # def pipeTrain(pipeQ, lower, higher, itrs, depth=2):
-    #     pipeQ = dislodger(pipeQ, size, [lower, higher], depth, depth+1,  itrs[0])
-    #     pipeQ = dislodger(pipeQ, size, [higher,lower ], depth+1, depth,  itrs[1])
-    #     pipeQ = dislodger(pipeQ, size, [higher, higher],depth+1, depth+1,itrs[2]) 
-    #     return pipeQ
     def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
-        pipeQ = multiTrain(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth+1),  itrs[0], itrs[0])
-        pipeQ = multiTrain(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth+1, d2=depth),  itrs[1], itrs[1])
-        pipeQ = multiTrain(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth+1, d2=depth+1),itrs[2], itrs[2])
+        pipeQ1, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth+1),  itrs[0])
+        pipeQ2, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth+1, d2=depth),  itrs[1])
+        pipeQ3, _, _ = playGames(setupGame(pipeQ, size, [higher, higher],learning=True,
+                                                            p1QM=pipeQ1, p2QM=pipeQ2, d1=depth+1, d2=depth+1), itrs[2])
         return pipeQ
+
+    
     start = time()
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 300)
-    QM = pipeTrain(QM,size, 'random', 'Qlearning', [40, 20, 20])
-    QM = pipeTrain(QM,size, 'Qlearning','miniQmax', [40,20,20], depth = 1)
-    QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [40, 20,20], depth = 1)
-    QM = pipeTrain(luckyQ,size, 'Qlearning','miniQmax', [40,20,20], depth = 2)    
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1000)
+    QM = pipeTrain(QM,size, 'random', 'Qlearning', [1000, 1000, 1000])
+    QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[400, 200, 200], depth = 1)
+    # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 1)
+    # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 2)
+    #QM = pipeTrain(luckyQ,size, 'Qlearning','miniQmax', [40,20,20], depth = 2)    
     print "trainin time" , time()-start
 
     exploreQ(QM, 3)
@@ -432,7 +415,7 @@ def run():
     ratios.append(getRatios(setupGame(QM, size, duels[8], d2=2              ), 100))
 
     print "total time: ", time() - start
-    with open("../shallowPipe.pickle", 'wb') as f:
+    with open("../ogpipeQ.pickle", 'wb') as f:
         pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
         
     cols = ["P1 win",  "draw", "P1 loss"]
@@ -442,7 +425,7 @@ def run():
     #fintable.plot.barh(colormap='Greens', stacked=True)
     #plt.show()
     print fintable
-    playGames(setupGame(QM, 3, ['human', 'miniQmax'], d2=3), 2, debug=True)
+    playGames(setupGame(luckyQ, 3, ['human', 'miniQmax'], d2=3), 2,check_convergence=False, debug=True)
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
