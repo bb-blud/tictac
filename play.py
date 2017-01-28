@@ -363,89 +363,86 @@ def run():
 # Final Comparison miniQmax centric
 #################################
     # size =3
-    # with open("../newlucky.pickle") as f:
-    #     luckyQ = pickle.load(f)
+    with open("../newlucky.pickle") as f:
+        luckyQ = pickle.load(f)
 
-    # def dislodger(pipeQ, size, policies, d1, d2, itrs):
-    #     done = False
+    def dislodger(pipeQ, size, policies, d1, d2, itrs):
+        done = False
 
-    #     while not done:
-    #         pipeQ, tally, conv = playGames(setupGame(pipeQ, size, policies, d1=d1, d2=d2, learning=True), itrs)
-    #         itrs -= sum(tally[o] for o in tally)
-    #         if itrs <1:
-    #             break
-    #         if conv:# and d2>d1:
-    #             pipeQ, _, _ = playGames(setupGame(pipeQ , size, ['random','random'], learning=True), 5)
-    #             print "DISLODGING", "depth: ",  d1, itrs
-    #         # elif conv:
-    #         #     done = True
+        while not done:
+            pipeQ, tally, conv = playGames(setupGame(pipeQ, size, policies, d1=d1, d2=d2, learning=True), itrs)
+            itrs -= sum(tally[o] for o in tally)
+            if itrs <1:
+                break
+            if conv:# and d2>d1:
+                pipeQ, _, _ = playGames(setupGame(pipeQ , size, ['random','random'], learning=True), 5)
+                print "DISLODGING", "depth: ",  d1, itrs
+            # elif conv:
+            #     done = True
                 
-    #     return QM
+        return QM
     
-    # # def pipeTrain(pipeQ, lower, higher, itrs, depth=2):
-    # #     pipeQ = dislodger(pipeQ, size, [lower, higher], depth, depth+1,  itrs[0])
-    # #     pipeQ = dislodger(pipeQ, size, [higher,lower ], depth+1, depth,  itrs[1])
-    # #     pipeQ = dislodger(pipeQ, size, [higher, higher],depth+1, depth+1,itrs[2]) 
-    # #     return pipeQ
-    # def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
-    #     pipeQ = multiTrain(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth+1),  itrs[0], itrs[0])
-    #     pipeQ = multiTrain(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth+1, d2=depth),  itrs[1], itrs[1])
-    #     pipeQ = multiTrain(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth+1, d2=depth+1),itrs[2], itrs[2])
+    # def pipeTrain(pipeQ, lower, higher, itrs, depth=2):
+    #     pipeQ = dislodger(pipeQ, size, [lower, higher], depth, depth+1,  itrs[0])
+    #     pipeQ = dislodger(pipeQ, size, [higher,lower ], depth+1, depth,  itrs[1])
+    #     pipeQ = dislodger(pipeQ, size, [higher, higher],depth+1, depth+1,itrs[2]) 
     #     return pipeQ
-    # start = time()
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 300)
-    # QM = pipeTrain(QM,size, 'random', 'Qlearning', [40, 20, 20])
-    # QM = pipeTrain(QM,size, 'Qlearning','miniQmax', [40,20,20], depth = 1)
-    # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [40, 20,20], depth = 1)
-    # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [40, 10,10], depth = 2)
-    # QM = pipeTrain(luckyQ,size, 'Qlearning','miniQmax', [40,20,20], depth = 2)    
-    # print "trainin time" , time()-start
+    def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
+        pipeQ = multiTrain(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth, d2=depth+1),  itrs[0], itrs[0])
+        pipeQ = multiTrain(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth+1, d2=depth),  itrs[1], itrs[1])
+        pipeQ = multiTrain(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth+1, d2=depth+1),itrs[2], itrs[2])
+        return pipeQ
+    start = time()
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 300)
+    QM = pipeTrain(QM,size, 'random', 'Qlearning', [40, 20, 20])
+    QM = pipeTrain(QM,size, 'Qlearning','miniQmax', [40,20,20], depth = 1)
+    QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [40, 20,20], depth = 1)
+    QM = pipeTrain(luckyQ,size, 'Qlearning','miniQmax', [40,20,20], depth = 2)    
+    print "trainin time" , time()-start
 
+    exploreQ(QM, 3)
 
-
-    # exploreQ(QM, 3)
-
-    # duels = [['miniQmax', 'ideal' ],
-    #          ['miniQmax', 'minimax'],
-    #          ['miniQmax', 'Qlearning'],
-    #          ['miniQmax', 'random'],
+    duels = [['miniQmax', 'ideal' ],
+             ['miniQmax', 'minimax'],
+             ['miniQmax', 'Qlearning'],
+             ['miniQmax', 'random'],
              
-    #          ['random', 'random'],
+             ['random', 'random'],
              
-    #          ['random', 'miniQmax'],
-    #          ['Qlearning','miniQmax'],
-    #          ['minimax', 'miniQmax'],
-    #          ['ideal', 'miniQmax'] ]
+             ['random', 'miniQmax'],
+             ['Qlearning','miniQmax'],
+             ['minimax', 'miniQmax'],
+             ['ideal', 'miniQmax'] ]
 
-    # start = time()
-    # ratios = []
-    # ## As Player 1
-    # ratios.append(getRatios(setupGame(QM, size, duels[0], d1=3              ), 100))
-    # ratios.append(getRatios(setupGame(QM, size, duels[1], d1=3, d2=2        ), 100))
-    # ratios.append(getRatios(setupGame(QM, size, duels[2], d1=3, p2QM=luckyQ ), 100))
-    # ratios.append(getRatios(setupGame(QM, size, duels[3], d1=3              ), 100))
+    start = time()
+    ratios = []
+    ## As Player 1
+    ratios.append(getRatios(setupGame(QM, size, duels[0], d1=2              ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[1], d1=2, d2=2        ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[2], d1=2, p2QM=luckyQ ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[3], d1=2              ), 100))
 
-    # # Random
-    # ratios.append(getRatios(setupGame(QM, size, duels[4],                   ), 100))
+    # Random
+    ratios.append(getRatios(setupGame(QM, size, duels[4],                   ), 100))
     
-    # ## As player 2
-    # ratios.append(getRatios(setupGame(QM, size, duels[5], d2=3              ), 100))
-    # ratios.append(getRatios(setupGame(QM, size, duels[6], d2=3, p1QM=luckyQ ), 100))
-    # ratios.append(getRatios(setupGame(QM, size, duels[7], d1=2, d2=3        ), 100))
-    # ratios.append(getRatios(setupGame(QM, size, duels[8], d2=3              ), 100))
+    ## As player 2
+    ratios.append(getRatios(setupGame(QM, size, duels[5], d2=2              ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[6], d2=2, p1QM=luckyQ ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[7], d1=2, d2=2        ), 100))
+    ratios.append(getRatios(setupGame(QM, size, duels[8], d2=2              ), 100))
 
-    # print "total time: ", time() - start
-    # with open("../pipeQ.pickle", 'wb') as f:
-    #     pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
+    print "total time: ", time() - start
+    with open("../shallowPipe.pickle", 'wb') as f:
+        pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
         
-    # cols = ["P1 win",  "draw", "P1 loss"]
-    # rows = [r[0] +' v '+r[1] for r in duels]
-    # fintable = pd.DataFrame(ratios, columns = cols, index=rows)
-    # #fintable.to_csv('../"miniQmax_fin.csv')
-    # #fintable.plot.barh(colormap='Greens', stacked=True)
-    # #plt.show()
-    # print fintable
-    # playGames(setupGame(QM, 3, ['human', 'miniQmax'], d2=3), 2, debug=True)
+    cols = ["P1 win",  "draw", "P1 loss"]
+    rows = [r[0] +' v '+r[1] for r in duels]
+    fintable = pd.DataFrame(ratios, columns = cols, index=rows)
+    #fintable.to_csv('../"miniQmax_fin.csv')
+    #fintable.plot.barh(colormap='Greens', stacked=True)
+    #plt.show()
+    print fintable
+    playGames(setupGame(QM, 3, ['human', 'miniQmax'], d2=3), 2, debug=True)
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
