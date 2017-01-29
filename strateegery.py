@@ -64,19 +64,19 @@ class Strateegery(object):
     ###########################################################
     def Qlearning(self, player, threshold = .3):
         gs = self.game_state
-        
+        t_sequence = tuple( (gs.transformIndex(i), m) for i,m in gs.game_sequence )
         Q = gs.QM.Q
         if player.use_inner_Q:
             Q = player.inner_Q.Q
 
         # All indices that are legal next moves
-        valid_indices= [ index for index in range(gs.size**2) if gs.validMove(index, gs.game_sequence) ]
-        
+        valid_indices= [ index for index in range(gs.size**2) if gs.validMove(index, t_sequence) ]
+
         # Player 1 will choose to maximize, Player 2 will minimize
         player_strategy = { gs.players[0].mark : max, gs.players[1].mark : min } [player.mark]
         
         # Visited sequences in Q that match the current game up until their last move (i.e. possible futures after current state)
-        charted = [ seq for seq in Q.keys() if seq[:-1] == tuple(gs.game_sequence) ]
+        charted = [ seq for seq in Q.keys() if seq[:-1] == tuple(t_sequence) ]
         
         # Legal moves that lead to sequences not in Q yet
         uncharted_i = [ index for index in valid_indices if index not in [ seq[-1][0] for seq in charted ] ]
@@ -84,7 +84,7 @@ class Strateegery(object):
        
         if uncharted_i and random.random() > threshold and gs.step > 1: # If a move hasn't been done try it, randomly
             #print 'uncharted'
-            return random.choice(uncharted_i), player.mark
+            return gs.inverseTFIndex(random.choice(uncharted_i)), player.mark
         
         # Q index and values of the future sequences that could be legally taken
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
@@ -94,10 +94,10 @@ class Strateegery(object):
             player_optimal = player_strategy(index_and_val, key=Q.get)
             equivalents = [c for c in index_and_val if Q[c] == Q[player_optimal] ] # There might be more that one sequence that is optimal
             move_seq = random.choice(equivalents)
-            return move_seq[-1][0] , player.mark
+            return gs.inverseTFIndex(move_seq[-1][0]) , player.mark
         
         #print 'just valid' #debug
-        return random.choice(valid_indices) , player.mark # simply return a legal move in any other case
+        return gs.inverseTFIndex(random.choice(valid_indices)) , player.mark # simply return a legal move in any other case
             
             
     ###########################################################

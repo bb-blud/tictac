@@ -67,6 +67,7 @@ class GameState(object):
 
         # For global coordinate transform
         self.transform = lambda (x,y): (x,y)
+        self.inverseTF = lambda (x,y): (x,y)
 
     def setPlayers(self, player1, player2):
         self.players = player1, player2
@@ -167,6 +168,7 @@ class GameState(object):
         self.lines = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg': {} }
         self.game_sequence = []
         self.transform = lambda (x,y): (x,y)
+        self.inverseTF = lambda (x,y): (x,y)
         self.current_player = self.players[0]
         for p in self.players:
             if p:
@@ -184,21 +186,29 @@ class GameState(object):
         
         parity = size+1                    # For even numbered boards, vertical and horizontal
         midline = size/2 - 0.5*(parity%2)  # lines of symmetry are halfway between integer values
-
+        
+        transformations = []
         if x > midline:  # If position lies below horizontal
             reflectX = lambda (x,y): (int(midline - (x - midline)), y)
             x , y = reflectX( (x,y) )
-            self.transform = compose(reflectX, self.transform)
+            transformations.append(reflectX)
+            #self.transform = compose(reflectX, self.transform)
             
             
         if y > midline:  # If position lies to the right of vertical
             reflectY = lambda (x,y): (x, int(midline - (y - midline)) )
             x , y = reflectY( (x,y) )
-            self.transform = compose(reflectY, self.transform)
+            transformations.append(reflectY)
+            #self.transform = compose(reflectY, self.transform)
             
         if y > x:        # If position lies below main 'positive' diagonal
             reflectDiagonal = lambda (x,y): (y,x)
-            self.transform = compose(reflectDiagonal, self.transform)
+            transformations.append(reflectDiagonal)
+            #self.transform = compose(reflectDiagonal, self.transform)
+            
+        for k, trans in enumerate(transformations):
+            self.transform = compose(trans, self.transform)
+            self.inverseTF = compose(transformations[-(k+1) ], self.inverseTF)
 
     def getCoordinates(self, index):
         #Remainder mod n of an index gives the x coordinate,
@@ -212,6 +222,9 @@ class GameState(object):
 
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
+    
+    def inverseTFIndex(self, index):
+        return self.getIndex(self.inverseTF(self.getCoordinates(index)))
     
     ##########
     # This method is a workhorse for most of the game measuring logic
@@ -395,13 +408,13 @@ class GameState(object):
                 print row
             print
 
-            tseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in seq]
+            tseq = [(self.transformIndex(s[0]), s[1]) for s in seq]
             print tseq
             for row in self.makeGrid(tseq):
                 print row
             print
 
-            ttseq = [(self.getIndex(self.transform(self.getCoordinates(s[0]))), s[1]) for s in tseq]
+            ttseq = [(self.inverseTFIndex(s[0]), s[1]) for s in tseq]
             print ttseq
             for row in self.makeGrid(ttseq):
                 print row

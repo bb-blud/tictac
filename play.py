@@ -380,7 +380,7 @@ def run():
 
     
     # start = time()
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1000)
+    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1030)
     QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 2)
@@ -428,7 +428,7 @@ def run():
     cols = ["P1 win",  "draw", "P1 loss"]
     rows = [r[0] +' v '+r[1] for r in duels]
     fintable = pd.DataFrame(ratios, columns = cols, index=rows)
-    fintable.to_csv('../pipeQ_var1007.csv')#"miniQmax_fin.csv')
+    #fintable.to_csv('../pipeQ_var1007.csv')#"miniQmax_fin.csv')
     #fintable.plot.barh(colormap='Greens', stacked=True)
     #plt.show()
     print fintable
@@ -612,19 +612,19 @@ def run():
     # # # Have two agents learn against each other
     # # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
     # print "Training time: " , time() - start 
+
+    # duels = [ ['ideal', 'Qlearning'  ],
+    #           ['Qlearning', 'ideal'  ],
+    #           ['minimax', 'Qlearning'],
+    #           ['Qlearning', 'minimax'],
+    #           ['Qlearning', 'Qlearning'],
+    #           ['random', 'Qlearning'],
+    #           ['Qlearning', 'random'], 
+    #           ['random','random'] ]
     
     # ##TEST IT
-    # ratios = fightDuels([QM, QM, QM, QM, QM,QM, QM, QMap()],
-    #                     [ ['ideal', 'Qlearning'  ],
-    #                       ['Qlearning', 'ideal'  ],
-    #                       ['minimax', 'Qlearning'],
-    #                       ['Qlearning', 'minimax'],
-    #                       ['Qlearning', 'Qlearning'],
-    #                       ['random', 'Qlearning'],
-    #                       ['Qlearning', 'random'], 
-    #                       ['random','random'] ], size, n_games = 100 )
+    # ratios = fightDuels([QM, QM, QM, QM, QM,QM, QM, QMap()], duels, size, n_games = 100 )
  
-    
     # cols = ["P1 win",  "draw", "P1 loss"]
     
     # rows = ('ideal vs lucky_Q', 'lucky_Q vs ideal',
@@ -639,7 +639,6 @@ def run():
     # table.plot.barh(colormap="Greens", stacked=True)
     # plt.show()
     # print
-
     
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION    
@@ -1014,7 +1013,7 @@ def run():
     # s = GameState(5)
     # s.test_lines()
     
-    # #Transform to 'standard' position
+    #Transform to 'standard' position
     # gs = GameState()
     # gs.testTransform()
     
