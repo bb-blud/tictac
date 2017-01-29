@@ -25,7 +25,7 @@ class DecisionPlayer(Player):
         self.inner_Q = QMap()
         self.use_inner_Q = False
         
-    def makeMove(self):
+    def makeMove(self): 
         move = {
             'random'   : self.strategies.randomMove,
             'ideal'    : self.strategies.ideal,
@@ -34,25 +34,28 @@ class DecisionPlayer(Player):
             'miniQmax' : self.strategies.minimaxMove,
 
             'human'    : self.strategies.humanMove,
-            'debug'    : self.debug}[self.policy]
+            'debug'    : self.debug}[self.policy]  # Player's policy dictates what function is called in strateegery
         
         if self.policy in ['minimax', 'miniQmax']:
             return move(self, self.depth)
 
         return move(self)
     
-    def setInnerQ(self, QM):
+    def setInnerQ(self, QM): # For use by Qlearning instead of the global Q map
         self.use_inner_Q = True
         self.inner_Q = QM
 
     ########## Player for debugging ##########
-    def setDebug(self, sequence):
+    
+    ## Load specific game sequences
+    def setDebug(self, sequence):  
         from collections import deque
         self.inDebug = True
         self.problem_sequence = sequence
         self.Xmoves = deque([move for move in self.problem_sequence if move[1] == 'X'])
         self.Omoves = deque([move for move in self.problem_sequence if move[1] == 'O'])
-
+        
+    ## Call upon loaded sequences for replay
     def debug(self, player):
         self.strategies.ideal(self)
         if self.inDebug:
@@ -63,10 +66,11 @@ class DecisionPlayer(Player):
         return
 #########################################################################################
 
+# Set up all parameters for a game to be played returns a GameState instance
 def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None, d1=2, d2=2):
     gs = GameState(game_size,  learning)
     gs.setQMap(globalQM)
-
+    
     player1 = DecisionPlayer(marks[0], gs, policies[0], d1)
     if p1QM is not None:
         player1.setInnerQ(p1QM)
@@ -79,6 +83,7 @@ def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1
 
     return gs
 
+##Play games and return totals for win:draw:loss divided by total games
 def getRatios(game_state, n_games, debug=False):
     QM, tally, conv = playGames(game_state, n_games, debug=debug)
     
@@ -87,6 +92,7 @@ def getRatios(game_state, n_games, debug=False):
     s = sum(ts)
     return [ts[0]/s, ts[2]/s, ts[1]/s]
 
+##Convenience method multiple duels can be played and an array of final ratio arrays is returned
 def fightDuels(QMs, duels, size, n_games, **kwargs):
     ratios = []
 
@@ -107,13 +113,13 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
     gs = game_state
     
     #### Crude convergence test ####
-    repeats = deque()
-    if check_convergence:
+    repeats = deque()                   #
+    if check_convergence:               # A buffer of the last 10 games played is created
         buffer_size = 10
         # if gs.learning:
         #     buffer_size = 3*n_games
-        for game in range(buffer_size):
-            while not gs.game_finished:
+        for game in range(buffer_size): #
+            while not gs.game_finished: # Filling buffer
                 gs.takeStep()
                 if debug:
                     gs.printGame()
@@ -121,8 +127,8 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
             gs.resetGame()
 
     ######### Play Games #########
-    current = []
-    for game in range(n_games):
+    current = []                 #
+    for game in range(n_games):  # Main game playing loop 
 
         while not gs.game_finished:
             gs.takeStep()
@@ -132,7 +138,7 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
             gs.printGame()
             print
 
-        tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1
+        tally[ (gs.players[0].is_winner, gs.players[1].is_winner) ] += 1 ##Update game tally
 
         if debug:
             for p in gs.players:
@@ -141,16 +147,17 @@ def playGames(game_state, n_games, check_convergence=True,  debug=False):
 
         ## Exit if converging ##
         current = gs.game_sequence
-        repeats.append(current)
-        repeats.popleft()
+        repeats.append(current) #Append the last game played to buffer
+        repeats.popleft()       #remove the last game from the buffer
 
         if debug:
             for r in repeats:
                 print r
                 print "**"
             print
-
-        if False not in (current == g for g in repeats) and check_convergence:
+            
+        # If all games in the repeats buffer are equal then players have converged to a single game 
+        if False not in (current == g for g in repeats) and check_convergence: 
             print "CONVERGENCE ON GAME NUMBER: ", game, [p.policy for p in gs.players]
             is_converging = True
             break
@@ -239,14 +246,14 @@ def printTally(game_state, n_games):
     print "{} : {} : {}".format(ts[1]/s, ts[2]/s, ts[0]/s)
 
 
-def breed(QM1, QM2, size, n_cycles):
-    game_state = setupGame(QMap(), size, ['Qlearning', 'Qlearning'], learning=True, p1QM=QM1)    
-    QM, tally, conv = playGames(game_state, n_cycles)
+# def breed(QM1, QM2, size, n_cycles):
+#     game_state = setupGame(QMap(), size, ['Qlearning', 'Qlearning'], learning=True, p1QM=QM1)    
+#     QM, tally, conv = playGames(game_state, n_cycles)
 
-    game_state = setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True, p2QM=QM2)
-    QM, tally, conv = playGames(game_state, n_cycles)
+#     game_state = setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True, p2QM=QM2)
+#     QM, tally, conv = playGames(game_state, n_cycles)
 
-    return QM
+#     return QM
 
 def exploreQ(QM,d):
     Q = QM.Q
@@ -260,8 +267,6 @@ def exploreQ(QM,d):
         print
         
 def run():
-
-
     # with open("../pipeQ.pickle", 'rb') as f:
     #     pipeQ = pickle.load(f)
     # gs = setupGame(pipeQ, 3, ['human','ideal'],  d1=3)
@@ -359,10 +364,11 @@ def run():
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
 
-##################################
+#####################################
 # Final Comparison miniQmax centric
-#################################
-    # size =3
+####################################
+
+    size =3
     with open("../newlucky.pickle") as f:
         luckyQ = pickle.load(f)
 
@@ -373,18 +379,16 @@ def run():
         return pipeQ
 
     
-    start = time()
+    # start = time()
     QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1000)
     QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 2)
-    #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
-    # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 1)
-    # QM = pipeTrain(QM,size, 'miniQmax','miniQmax', [100, 100, 100], depth = 2)
-    #QM = pipeTrain(luckyQ,size, 'Qlearning','miniQmax', [40,20,20], depth = 2)    
-    print "trainin time" , time()-start
+    # #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
 
-    exploreQ(QM, 3)
+    # print "trainin time" , time()-start
+
+    # exploreQ(QM, 3)
     duels = [['miniQmax', 'ideal' ],
              ['miniQmax', 'minimax'],
              ['miniQmax', 'Qlearning'],
@@ -396,6 +400,9 @@ def run():
              ['Qlearning','miniQmax'],
              ['minimax', 'miniQmax'],
              ['ideal', 'miniQmax' ] ]
+
+    # with open("../pipeQ.pickle") as f:
+    #     QM = pickle.load(f)
 
     start = time()
     ratios = []
@@ -415,31 +422,31 @@ def run():
     ratios.append(getRatios(setupGame(QM, size, duels[8], d2=2              ), 100))
 
     print "total time: ", time() - start
-    with open("../ogpipeQ.pickle", 'wb') as f:
-        pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
+    # with open("../pipeQ.pickle", 'wb') as f:
+    #     pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
         
     cols = ["P1 win",  "draw", "P1 loss"]
     rows = [r[0] +' v '+r[1] for r in duels]
     fintable = pd.DataFrame(ratios, columns = cols, index=rows)
-    fintable.to_csv('../blankQ.csv')#"miniQmax_fin.csv')
+    fintable.to_csv('../pipeQ_var1007.csv')#"miniQmax_fin.csv')
     #fintable.plot.barh(colormap='Greens', stacked=True)
     #plt.show()
     print fintable
-    playGames(setupGame(luckyQ, 3, ['human', 'miniQmax'], d1=2), 2,check_convergence=False, debug=True)
+    playGames(setupGame(luckyQ, 3, ['miniQmax', 'minimax'], d1=2), 2,check_convergence=False, debug=True)
+    
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
-
-    duels = [['Qlearning', 'ideal' ],
-             ['Qlearning', 'minimax'],
-             ['Qlearning', 'miniQmax'],
-             ['Qlearning', 'random'],
+    # duels = [['Qlearning', 'ideal' ],
+    #          ['Qlearning', 'minimax'],
+    #          ['Qlearning', 'miniQmax'],
+    #          ['Qlearning', 'random'],
              
-             ['random', 'random'],
+    #          ['random', 'random'],
              
-             ['random', 'Qlearning'],
-             ['miniQmax','Qlearning'],
-             ['minimax', 'Qlearning'],
-             ['ideal', 'Qlearning' ] ]
+    #          ['random', 'Qlearning'],
+    #          ['miniQmax','Qlearning'],
+    #          ['minimax', 'Qlearning'],
+    #          ['ideal', 'Qlearning' ] ]
 #######################################################
 # Compare Qlearning (lucky) with miniQmax different Qs
 #

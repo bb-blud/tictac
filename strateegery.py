@@ -8,7 +8,8 @@ class Strateegery(object):
     
     def __init__(self, game_state):
         self.game_state = game_state
-
+        
+    # Workhorse method returns all lines in the current game that have length or "rank" N
     def linesOfRankN(self, N, sequence, player):
         gs = self.game_state
         size = gs.size
@@ -18,12 +19,13 @@ class Strateegery(object):
         for direction in lines:
             keys = range(size)
             if direction in ['D-pos', 'D-neg']:
-                keys = [0]
-                
+                keys = [0] # There is only one line for each diagonal, so only one index to reference
+
             viables = [coord for coord in keys if lines[direction].get(coord, "Empty") not in ["Empty", None]]
             
             for line in (lines[direction][coord] for coord in viables):
-                if line[0] == player.mark and len(line) - 1 == N: # first entry is a mark
+                # If the line belongs to the player  and its length is N 
+                if line[0] == player.mark and len(line) - 1 == N: #(first entry is player's mark not index hence minus 1)
                     n_ranked.append((direction, line))
                     
         return n_ranked
@@ -84,9 +86,6 @@ class Strateegery(object):
             #print 'uncharted'
             return random.choice(uncharted_i), player.mark
         
-        # if gs.learning and random.random() > threshold :
-        #     return random.choice(valid_indices) , player.mark # return a random move while training to break sinks
-
         # Q index and values of the future sequences that could be legally taken
         index_and_val = { c : Q[c] for c in charted if c[-1][0] in valid_indices}
         
@@ -107,22 +106,23 @@ class Strateegery(object):
     def minimaxMeasure(self, sequence, player, isleaf):
         gs = self.game_state
         size = self.game_state.size
-
-        if isleaf['tie']:
+        
+        # If current node is an endgame tie
+        if isleaf['tie']:     
             return 0
-        elif isleaf['end']:
-            # reward max/min for a player win
+        # If current node is an endgame win
+        elif isleaf['end']:   
             sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
-            return sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))
+            return sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))  # reward max/min for a player win
         else:
-            measure = 0
+            measure = 0 
             for n in range(1,size):
-                measure += n * len(self.linesOfRankN(n, sequence, gs.players[0]))
+                measure += n * len(self.linesOfRankN(n, sequence, gs.players[0]))  # game measure max player
             for n in range(1,size):
-                measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))
+                measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))  # game measure min player
             return measure
 
-    ##### miniQMax #####
+    ##### miniQmax #####
     def miniQMax(self, sequence, player, isleaf):
         gs = self.game_state
         set_val = False
@@ -132,35 +132,35 @@ class Strateegery(object):
         val = gs.QM.Q.get(seq, None)
         
         if val is None and gs.learning:
-            set_val = True
-            
-        if isleaf['tie']:
-            if set_val:
-                gs.QM.Q[seq] = 0
+            set_val = True  # If learning is on (during training) values are set to Q and returned
+
+        # If current node is an endgame tie return 0
+        if isleaf['tie']:            
+            if set_val:  
+                gs.QM.Q[seq] = 0 # Setting value if learning
             return 0
         
+        # If current node is an endgame is a win return +-1
         elif isleaf['end']:
             if set_val:
                 gs.QM.Q[seq] = sgn
-            return sgn
+            return sgn  
         else:
-            if val is None:
+            # return zero of reached unexplored state (code is set for possible return of experimental values)
+            if val is None:  
                 if set_val:
                     gs.QM.Q[tuple(sequence)] = sgn * 0.
                 return sgn*0.
             else:
-                return val
+                return val # If node is not a leaf then return the Q's value for it
         
     #################
 
     def isLeaf(self, sequence, player):
         gs = self.game_state        
-
         return {
             'tie': gs.isTie(sequence),
-            
-            # There is a line of length size game over
-            'end': len(self.linesOfRankN(gs.size, sequence, player)) > 0} 
+            'end': len(self.linesOfRankN(gs.size, sequence, player)) > 0} # True if there is a line of length size, game over
     
     def minimax(self, sequence, depth, Min, Max, player, evaluate):
         gs = self.game_state
@@ -169,11 +169,11 @@ class Strateegery(object):
         
         isleaf = self.isLeaf(sequence,player)
         
-        if isleaf['tie'] or isleaf['end'] or depth == 0:
+        if isleaf['tie'] or isleaf['end'] or depth == 0:  # If we have reached depth limit or we are at a leaf node
             return evaluate(sequence, player, isleaf)
 
         valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ]
-        ## Max
+        ## Max 
         if  player == gs.players[0]:
             v = Min
             for i in valid_i:
@@ -227,6 +227,7 @@ class Strateegery(object):
     def ideal(self, player):
         gs = self.game_state
         size = gs.size
+        # Legal future moves that can be taken
         valid_indices = [ index for index in range(size**2) if gs.validMove(index, gs.game_sequence) ]
         opponent = gs.otherPlayer()
 
@@ -236,16 +237,14 @@ class Strateegery(object):
                                  
         # 1st priority, Block opponent from winning or win game                                                     
         # 
-        for strategy in ['gain', 'block']:
+        for strategy in ['gain', 'block']: 
             p = {'block' : opponent, 'gain' : player}[strategy]
 
             for i in valid_indices:                             
                 test_seq = gs.game_sequence[:] + [(i, p.mark)]   
 
                 full_line = self.linesOfRankN(size, test_seq, p)
-                if full_line != []:
-                    if debug:
-                        print "win/block", i, player.mark, strategy
+                if full_line != []: # If there is a 
                     return i, player.mark        
 
         if gs.step >= 4*size - 9:  # Check only when game is sufficiently developed
@@ -253,61 +252,75 @@ class Strateegery(object):
             # 2nd priority, Block opponent's fork or fork
             #
             for strategy in ['gain', 'block']:
-                p = {'block' : opponent, 'gain' : player}[strategy]
+                p = {'block' : opponent, 'gain' : player}[strategy] 
                 
                 for i in valid_indices:
-                    test_seq = gs.game_sequence[:] + [(i, p.mark)]
-                    forks = self.linesOfRankN(size - 1, test_seq, p)
+                    test_seq = gs.game_sequence[:] + [(i, p.mark)]    # Find lines that are one move away from a
+                    forks = self.linesOfRankN(size - 1, test_seq, p)  # win in every possible next sequence
 
-                    if forks != [] and len(forks) >=2:
-                        if strategy == 'block':
-                            block_lines = self.linesOfRankN(size - 2, gs.game_sequence,  player)
+                    if forks != [] and len(forks) >=2:  # If a sequence yields two such lines then a fork will exist on next move
+                        if strategy == 'block':         # If fork will belong to the opponent set up a block
                             
-                            for index in valid_indices:
+                            # We are one move away from a fork, one more away from opponent's win
+                            # Our options lie two moves from end, consider lines of size - 2
+                            block_lines = self.linesOfRankN(size - 2, gs.game_sequence,  player) 
+                            
+                            for index in valid_indices: 
                                 for b_line in block_lines:
                                     
+                                    # consider valid next moves belonging to such potential block lines
                                     if gs.belongsToLine(index, b_line[0], b_line[1]):
+                                        
+                                        # if we take a position in the block line (making it of length size -1)
+                                        # which index makes it of length size, (i.e. a winning line)
                                         index_to_win = gs.indexToWin(b_line[0], b_line[1] + [index])
+
+                                        # Suppose the opponent blocks our win, hence the following sequence;
                                         block_fork_seq = test_seq + [(index, player.mark),(index_to_win, opponent.mark)]
-                                                            
+
+                                        # We don't want the opponent's block, to actually form his fork OR give him a win
                                         if len(self.linesOfRankN(size, block_fork_seq, opponent)) < 1 and \
-                                        len(self.linesOfRankN(size - 1, block_fork_seq, opponent))< 2:    # No winning lines and no more forks
-                                            
+                                           len(self.linesOfRankN(size - 1, block_fork_seq, opponent))< 2:  #no opponent wins and no opponent forks    
+                                        
+                                            # Opponent blocking our line will now ruin his fork attempt, 
                                             return index, player.mark
+                                        
                         if strategy == 'gain':
-                            if debug:
-                                print "fork", i, player.mark, strategy
+                            # Otherwise next fork is current player's, make it
                             return i, player.mark
                             
         # Else measure the value of each possible next move
         #
-        index_measures = {'block':{}, 'gain':{}}
+        index_measures = {'block':{}, 'gain':{}} 
         for strategy in ['gain', 'block']:
             p = {'block' : opponent, 'gain' : player}[strategy]
         
             for i in valid_indices:
                 test_seq = gs.game_sequence[:] + [(i, p.mark)]
-
+                #For every possible next move measure the state of the game
+                #in terms of current player AND from opponent's perspective
                 measure_at_i = self.measureState(test_seq, p)
                 index_measures[strategy][i] = measure_at_i
 
+        # Which next move gives the biggest value for opponent (even if its not his move next)
         max_block_index = max(index_measures['block'], key=index_measures['block'].get)
+        # Which next move gives the biggest value for current player
         max_gain_index = max(index_measures['gain'], key=index_measures['gain'].get)
 
         # Return move of most measure or block the opponent's
         #
+        #Make move of highest measure if its measure is bigger than or equal to opponents highest measure
         if index_measures['gain'][max_gain_index] >= index_measures['block'][max_block_index]:
             if debug:
                 print "measure gain", max_gain_index, player.mark
             return max_gain_index, player.mark
-        else:
+        
+        #Else opponent can gain more value with his max move than current player
+        #Prevent him from taking it
+        else:  
             if debug:
                 print "measure block", max_block_index, player.mark
             return max_block_index, player.mark
-
-
-
-
 
 
         

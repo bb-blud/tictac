@@ -13,12 +13,16 @@ class QMap(object):
    
     def __init__(self, gamma=0.1, alpha=0.1):
         self.Q = {}
-        self.gamma = gamma
-        self.alpha = alpha
+        # Learning rates for Q learning
+        self.gamma = gamma # For discounted sums
+        self.alpha = alpha # For temporal difference
+        
     def visitQ(self, sequence):
+        # Add a new game sequence as a key to the dictionary initialized with value 0
         if not self.Q.get(sequence, False):
             self.Q[sequence] = 0
 
+    # Q-learning update of the Q dictionary
     def updateQ(self, game, players, size):
         
         if True not in (player.is_winner for player in players):
@@ -55,7 +59,10 @@ class GameState(object):
         # Initialize state variables
         self.game_finished = False
         self.step = 1
-        self.lines = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg':{} }
+        self.lines = {'Vertical':   {},  #Dictionary of dictionaries houses all lines
+                      'Horizontal': {},  #in the current game. Lines are referenced by
+                      'D-pos':      {},  #the coordinate common to all of its members,
+                      'D-neg':      {} } #except diagonals since there is only one of each
         self.game_sequence = []
 
         # For global coordinate transform
@@ -120,7 +127,7 @@ class GameState(object):
         # Find 'size' number of consecutive marks in a line, current_player wins
         for direction in ['Vertical', 'Horizontal', 'D-pos', 'D-neg']:
                         
-            keys = range(size)    # The possible line keys range from 0 to size -1, unless line is diagonal
+            keys = range(size)   # The possible line keys range from 0 to size -1, unless line is diagonal
             if direction in ['D-pos', 'D-neg']:
                 keys = [0]
                 
@@ -141,11 +148,14 @@ class GameState(object):
         size = self.size
         lines = self.findLines(sequence)
 
-        lv = len(lines['Vertical'].keys())
-        lh = len(lines['Horizontal'].keys())
-        
-        if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:
+        lv = len(lines['Vertical'].keys())   #How many Vertical lines have been explored up to this point
+        lh = len(lines['Horizontal'].keys()) #How many Horizontal lines have been explored up to this point
+
+        #First remember that if both players place marks on a line it becomes None or "not viable"
+        #So if all horizontals and all verticals have been played upon, and both diagonals are None (there is code repetition see updateFinished)
+        if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:            
             Nones = [None for _ in range(size)]
+            # If further all vericals have and horizontals are None, then there are no viable lines to try to win its a tie
             if [lines['Vertical'][k] for k in range(size) ] == Nones and [lines['Horizontal'][k] for k in range(size) ] == Nones:
                 return True
                 
@@ -162,42 +172,49 @@ class GameState(object):
             if p:
                 p.is_winner = False
 
+    # Build coordinate transform from reflections about the boards vertical, horizontal and d-pos lines
+    # of symmetry, gradually as needed                       
     def setTransform(self, first_move):
+        #Helper function composes two functions
         def compose(f,g):
             return lambda x: f(g(x))
         
         x , y = self.getCoordinates(first_move)
         size = self.size
         
-        parity = size+1
-        midline = size/2 - 0.5*(parity%2)
+        parity = size+1                    # For even numbered boards, vertical and horizontal
+        midline = size/2 - 0.5*(parity%2)  # lines of symmetry are halfway between integer values
 
-        if x > midline:
+        if x > midline:  # If position lies below horizontal
             reflectX = lambda (x,y): (int(midline - (x - midline)), y)
             x , y = reflectX( (x,y) )
             self.transform = compose(reflectX, self.transform)
             
             
-        if y > midline:
+        if y > midline:  # If position lies to the right of vertical
             reflectY = lambda (x,y): (x, int(midline - (y - midline)) )
             x , y = reflectY( (x,y) )
             self.transform = compose(reflectY, self.transform)
             
-        if y > x:
+        if y > x:        # If position lies below main 'positive' diagonal
             reflectDiagonal = lambda (x,y): (y,x)
             self.transform = compose(reflectDiagonal, self.transform)
 
     def getCoordinates(self, index):
-        x , y = index%self.size, index//self.size
+        #Remainder mod n of an index gives the x coordinate,
+        #Number of times n goes in index gives the y coordinate
+        x , y = index%self.size, index//self.size 
         return x,y
-    
+
     def getIndex(self, (x,y)):
         index = x + y*self.size
         return index
 
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
-                                        
+    
+    ##########
+    # This method is a workhorse for most of the game measuring logic
     def findLines(self, sequence):
         size = self.size
         lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg': {} }
@@ -229,39 +246,47 @@ class GameState(object):
                 tallyLine(direction, coordinate, move)
                     
             # Tally of the two possible diagonal lines
-            if x == y:
+            if x == y:   
                 tallyLine('D-pos', 0, move)
             if x + y == size - 1:
                 tallyLine('D-neg', 0, move)
 
         return lines_in_seq
 
+    ########
+    # Does a particular index belong to a line?
     def belongsToLine(self, index, direction, line):
-        first_point = 1
-        if direction == 'Horizontal':
+        first_point = 1  
+        if direction == 'Horizontal': # Check if index's y coordinate is the same as line's first point
             if self.getCoordinates(index)[1] == self.getCoordinates(line[first_point])[1]:
                 return True
-        elif direction == 'Vertical':
+        elif direction == 'Vertical': # Check if index's x coordinate is the same as line's first point
             if self.getCoordinates(index)[0] == self.getCoordinates(line[first_point])[0]:
                 return True
         else:
             x, y = self.getCoordinates(index)
 
-            if direction == 'D-pos' and  x == y:
+            if direction == 'D-pos' and  x == y:  # points in positive diagonal have equal x and y coordinates
                 return True
-            if direction == 'D-neg' and  x + y == self.size - 1:
+            if direction == 'D-neg' and  x + y == self.size - 1: # some of coordinates negative diagonal point is n -1
                 return True
             return False
-            
+
+    ####
+    # In a line of length size-1 return the index that fills
+    # it into a winning line of length size
     def indexToWin(self, direction, line):
         size = self.size
         if len(line[1:]) != size - 1:
             return None
 
+        ## Experiment in avoiding conditional if then statements
         i = 0
         if direction in ['Vertical' , 'Horizontal']:
+            # A vertical line is defined by the x coordinate of its points
+            # A horizontal line is defined byt the y coordinate of its points
             i = {'Vertical': line[1]%size, 'Horizontal' : line[1]//size }[direction]
-        
+
         return  {'D-neg'     : [k for k in range(size -1, size**2, size-1)[:-1] if k not in line[1:]][0],
                  
                  'D-pos'     : [k for k in range(0, size**2, size+1) if k not in line[1:]][0],
@@ -269,6 +294,22 @@ class GameState(object):
                  'Vertical'  : [k for k in range(i, i + size**2, size) if k not in line[1:]][0],
                  
                  'Horizontal': [k for k in range(i*size, i*size +size) if k not in line[:1]][0]  } [direction]
+
+                 #Explanation of return statement above:
+                 #For each line on the grid, the index of its points belong to an arithmetic progression.
+                 #For example, the first horizontal line's indices are; 0,1,2..size-1 
+                 #Ex 6x6:
+                 #  0 1 2 3 4 5
+                 #  6 7
+                 #  12  14
+                 #  18    21
+                 #  24      28
+                 #  30        35
+                 # So for horizontals step size is 1, shift by n to get all others
+                 # For verticals step size is n, shift by i to get all others
+                 # For positive diagonal step size is n+1
+                 # for negative diagonal step size is n-1 
+
 
 #####################
 #   Debugging
