@@ -23,27 +23,21 @@ class QMap(object):
             self.Q[sequence] = 0
 
     # Q-learning update of the Q dictionary
-    def updateQ(self, game, players, size):
+    def updateQ(self, game, sgn, weight =1):
         
-        if True not in (player.is_winner for player in players):
-            reward = 0
-        else:
-            n = len(game)
-            alpha = self.alpha 
+        n = len(game)
+        alpha = self.alpha 
             
-            winner = [p for p in players if p.is_winner][0]
-            sgn = { players[0].mark : 1.0, players[1].mark : -1.0 }[winner.mark]
+        reward = sgn#* weight**4 / n
             
-            reward = sgn#* size**4 / n
-            
-            for i in range(1, len(game)):
-                sub_sequence = tuple(game[:i])
+        for i in range(1, len(game)):
+            sub_sequence = tuple(game[:i])
 
-                # Temporal-difference
-                V = self.Q[sub_sequence]
-                X = sum([reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #(n-i) * reward * self.gamma**(i-1)#
+            # Temporal-difference
+            V = self.Q.get(sub_sequence, 0)
+            X = sum([reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #(n-i) * reward * self.gamma**(i-1)#
                 
-                self.Q[sub_sequence] = (1-alpha) * V + alpha * X
+            self.Q[sub_sequence] = (1-alpha) * V + alpha * X            
 
 class GameState(object):
     players = (None, None)
@@ -111,7 +105,12 @@ class GameState(object):
         # Update Q map
         if self.game_finished and self.learning:
             t_game_sequence = [ (self.transformIndex(index) , mark ) for index, mark in self.game_sequence ]
-            self.QM.updateQ(t_game_sequence, self.players, self.size)
+            
+            r = { (True , False) :  1.0,
+                  (False, False) :  0.0,
+                  (False, True ) : -1.0 }[self.players[0].is_winner, self.players[1].is_winner]
+            
+            self.QM.updateQ(t_game_sequence, r)
             
         # Set player to have next turn
         self.current_player = self.otherPlayer()

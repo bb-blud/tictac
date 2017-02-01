@@ -143,7 +143,7 @@ class Strateegery(object):
         # If current node is an endgame is a win return +-1
         elif isleaf['end']:
             if set_val:
-                gs.QM.Q[seq] = sgn
+                gs.QM.updateQ(sequence,sgn)
             return sgn  
         else:
             # return zero of reached unexplored state (code is set for possible return of experimental values)
