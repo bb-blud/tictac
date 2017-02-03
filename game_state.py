@@ -1,3 +1,5 @@
+
+
 class Player(object):
     mark = None
     
@@ -155,7 +157,7 @@ class GameState(object):
         #So if all horizontals and all verticals have been played upon, and both diagonals are None (there is code repetition see updateFinished)
         if lv == size and lh == size and lines['D-pos'].get(0, None) == None and lines['D-neg'].get(0, None) == None:            
             Nones = [None for _ in range(size)]
-            # If further all vericals have and horizontals are None, then there are no viable lines to try to win its a tie
+            # If further, all vericals have and horizontals are None, then there are no viable lines to try to win its a tie
             if [lines['Vertical'][k] for k in range(size) ] == Nones and [lines['Horizontal'][k] for k in range(size) ] == Nones:
                 return True
                 
@@ -173,9 +175,13 @@ class GameState(object):
             if p:
                 p.is_winner = False
 
-    # Build coordinate transform from reflections about the boards vertical, horizontal and d-pos lines
-    # of symmetry, gradually as needed                       
-    def setTransform(self, first_move):
+    def setTransform(self, first_move):        
+    """ 
+    Build coordinate transform from reflections about the boards vertical, 
+    horizontal and d-pos lines of symmetry, gradually as needed  
+
+    """
+    
         #Helper function composes two functions
         def compose(f,g):
             return lambda x: f(g(x))
@@ -191,43 +197,42 @@ class GameState(object):
             reflectX = lambda (x,y): (int(midline - (x - midline)), y)
             x , y = reflectX( (x,y) )
             transformations.append(reflectX)
-            #self.transform = compose(reflectX, self.transform)
-            
+                
             
         if y > midline:  # If position lies to the right of vertical
             reflectY = lambda (x,y): (x, int(midline - (y - midline)) )
             x , y = reflectY( (x,y) )
             transformations.append(reflectY)
-            #self.transform = compose(reflectY, self.transform)
-            
+                
         if y > x:        # If position lies below main 'positive' diagonal
             reflectDiagonal = lambda (x,y): (y,x)
             transformations.append(reflectDiagonal)
-            #self.transform = compose(reflectDiagonal, self.transform)
-            
+                
         for k, trans in enumerate(transformations):
             self.transform = compose(trans, self.transform)
             self.inverseTF = compose(transformations[-(k+1) ], self.inverseTF)
 
     def getCoordinates(self, index):
-        #Remainder mod n of an index gives the x coordinate,
-        #Number of times n goes in index gives the y coordinate
-        x , y = index%self.size, index//self.size 
-        return x,y
+        x , y = index%self.size, index//self.size  #Remainder mod n of an index gives the x coordinate,
+        return x,y                                 #Number of times n goes in index gives the y coordinate
 
     def getIndex(self, (x,y)):
         index = x + y*self.size
         return index
-
+   
     def transformIndex(self, index):
         return self.getIndex(self.transform(self.getCoordinates(index)))
     
     def inverseTFIndex(self, index):
         return self.getIndex(self.inverseTF(self.getCoordinates(index)))
     
-    ##########
-    # This method is a workhorse for most of the game measuring logic
+
     def findLines(self, sequence):
+        """ 
+        This method is a workhorse for most of the game measuring logic, it finds
+        all lines in the current state of the game 
+        """
+        
         size = self.size
         lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg': {} }
 
@@ -265,9 +270,12 @@ class GameState(object):
 
         return lines_in_seq
 
-    ########
-    # Does a particular index belong to a line?
     def belongsToLine(self, index, direction, line):
+        """ 
+        Checks if a particular index belongs to a line 
+
+        """
+        
         first_point = 1  
         if direction == 'Horizontal': # Check if index's y coordinate is the same as line's first point
             if self.getCoordinates(index)[1] == self.getCoordinates(line[first_point])[1]:
@@ -284,10 +292,13 @@ class GameState(object):
                 return True
             return False
 
-    ####
-    # In a line of length size-1 return the index that fills
-    # it into a winning line of length size
     def indexToWin(self, direction, line):
+        """
+        In a line of length size-1 return the index that fills
+        it into a winning line of length size 
+
+        """
+        
         size = self.size
         if len(line[1:]) != size - 1:
             return None

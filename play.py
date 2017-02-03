@@ -368,7 +368,7 @@ def run():
 # Final Comparison miniQmax centric
 ####################################
 
-    size =3
+    size = 3
     with open("../newlucky.pickle") as f:
         luckyQ = pickle.load(f)
 
@@ -379,16 +379,16 @@ def run():
         return pipeQ
 
     
-    # start = time()
+    start = time()
     QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1030)
     QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 2)
     # #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
 
-    # print "trainin time" , time()-start
+    print "training time" , time()-start
 
-    # exploreQ(QM, 3)
+    exploreQ(QM, 3)
     duels = [['miniQmax', 'ideal' ],
              ['miniQmax', 'minimax'],
              ['miniQmax', 'Qlearning'],
@@ -400,6 +400,17 @@ def run():
              ['Qlearning','miniQmax'],
              ['minimax', 'miniQmax'],
              ['ideal', 'miniQmax' ] ]
+    # duels = [['Qlearning', 'ideal' ],
+    #          ['Qlearning', 'minimax'],
+    #          ['Qlearning', 'miniQmax'],
+    #          ['Qlearning', 'random'],
+             
+    #          ['random', 'random'],
+             
+    #          ['random', 'Qlearning'],
+    #          ['miniQmax','Qlearning'],
+    #          ['minimax', 'Qlearning'],
+    #          ['ideal', 'Qlearning' ] ]
 
     # with open("../pipeQ.pickle") as f:
     #     QM = pickle.load(f)
@@ -432,7 +443,7 @@ def run():
     #fintable.plot.barh(colormap='Greens', stacked=True)
     #plt.show()
     print fintable
-    playGames(setupGame(luckyQ, 3, ['miniQmax', 'minimax'], d1=2), 2,check_convergence=False, debug=True)
+    playGames(setupGame(luckyQ, 3, ['human', 'miniQmax'], d1=2), 2,check_convergence=False, debug=True)
     
 ################################################################################## ###########################################
 # END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION END SECTION
