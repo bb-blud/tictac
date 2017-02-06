@@ -1,13 +1,13 @@
-'''
+"""
 This module houses the Player, QMap and GameState classes. All information
 about the state of a game is stored and modified here.
 
-'''
+"""
 
 class Player(object):
-    '''
+    """
     A basic player class to form the basis of player agents.
-    '''
+    """
     mark = None
     
     def __init__(self, mark, game_state):
@@ -19,10 +19,11 @@ class Player(object):
         pass
 
 class QMap(object):
-   '''
-   Contains the Q dictionary and methods for updating its keys
-   and values.
-   '''
+    """
+    Contains the Q dictionary and methods for updating its keys
+    and values.  
+    """
+   
     def __init__(self, gamma=0.1, alpha=0.1):
         self.Q = {}
         # Learning rates for Q learning
@@ -52,11 +53,11 @@ class QMap(object):
             self.Q[sub_sequence] = (1-alpha) * V + alpha * X            
 
 class GameState(object):
-    '''
+    """
     Contains the entire state of the game, cosisting of a sequence of moves,
     two players, and an instance of QMap to be used by the player agents.
 
-    '''
+    """
     players = (None, None)
     current_player = None
     def __init__(self, size=3, learning=False):        
@@ -191,11 +192,11 @@ class GameState(object):
                 p.is_winner = False
 
     def setTransform(self, first_move):        
-    """ 
-    Build coordinate transform from reflections about the board's vertical, 
-    horizontal and d-pos lines of symmetry, gradually as needed  
-
-    """
+        """ 
+        Build coordinate transform from reflections about the board's vertical, 
+        horizontal and d-pos lines of symmetry, gradually as needed  
+        
+        """
         #Helper function composes two functions
         def compose(f,g):
             return lambda x: f(g(x))

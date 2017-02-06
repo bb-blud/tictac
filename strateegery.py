@@ -1,7 +1,15 @@
-'''
+"""
 This module contains all game strategy logic used by the player agents.
-The 
-'''
+5 main game strategies exist, 
+* random
+* human (prompts for user input),
+* ideal (hardcoded logic)
+* Qlearning (learned Q map based decisions)
+* minimax
+  i) Hardcoded node evaluation using minmaxMeasure
+ ii) Q map based node evaluation
+
+"""
 import random
 
 debug = False
@@ -14,10 +22,10 @@ class Strateegery(object):
         self.game_state = game_state
         
     def linesOfRankN(self, N, sequence, player):
-        '''
+        """
         Workhorse method returns all lines in the current game that have length or "rank" N
 
-        '''
+        """
         gs = self.game_state
         size = gs.size
         lines = gs.findLines(sequence)
