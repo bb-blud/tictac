@@ -1,6 +1,13 @@
+'''
+This module houses the Player, QMap and GameState classes. All information
+about the state of a game is stored and modified here.
 
+'''
 
 class Player(object):
+    '''
+    A basic player class to form the basis of player agents.
+    '''
     mark = None
     
     def __init__(self, mark, game_state):
@@ -12,7 +19,10 @@ class Player(object):
         pass
 
 class QMap(object):
-   
+   '''
+   Contains the Q dictionary and methods for updating its keys
+   and values.
+   '''
     def __init__(self, gamma=0.1, alpha=0.1):
         self.Q = {}
         # Learning rates for Q learning
@@ -42,6 +52,11 @@ class QMap(object):
             self.Q[sub_sequence] = (1-alpha) * V + alpha * X            
 
 class GameState(object):
+    '''
+    Contains the entire state of the game, cosisting of a sequence of moves,
+    two players, and an instance of QMap to be used by the player agents.
+
+    '''
     players = (None, None)
     current_player = None
     def __init__(self, size=3, learning=False):        
@@ -50,9 +65,9 @@ class GameState(object):
         
         # Game size
         self.size = abs(size)
-        self.learning = learning
         
         # Initialize state variables
+        self.learning = learning
         self.game_finished = False
         self.step = 1
         self.lines = {'Vertical':   {},  #Dictionary of dictionaries houses all lines
@@ -177,11 +192,10 @@ class GameState(object):
 
     def setTransform(self, first_move):        
     """ 
-    Build coordinate transform from reflections about the boards vertical, 
+    Build coordinate transform from reflections about the board's vertical, 
     horizontal and d-pos lines of symmetry, gradually as needed  
 
     """
-    
         #Helper function composes two functions
         def compose(f,g):
             return lambda x: f(g(x))
@@ -231,8 +245,8 @@ class GameState(object):
         """ 
         This method is a workhorse for most of the game measuring logic, it finds
         all lines in the current state of the game 
-        """
-        
+
+        """      
         size = self.size
         lines_in_seq = {'Vertical': {}, 'Horizontal': {}, 'D-pos': {}, 'D-neg': {} }
 
@@ -274,8 +288,7 @@ class GameState(object):
         """ 
         Checks if a particular index belongs to a line 
 
-        """
-        
+        """        
         first_point = 1  
         if direction == 'Horizontal': # Check if index's y coordinate is the same as line's first point
             if self.getCoordinates(index)[1] == self.getCoordinates(line[first_point])[1]:
@@ -297,8 +310,7 @@ class GameState(object):
         In a line of length size-1 return the index that fills
         it into a winning line of length size 
 
-        """
-        
+        """       
         size = self.size
         if len(line[1:]) != size - 1:
             return None
@@ -448,7 +460,6 @@ class GameState(object):
 
                   ]
         
-
         for t, test in enumerate(tests):
             
             # Grid            

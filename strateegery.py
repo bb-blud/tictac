@@ -1,3 +1,7 @@
+'''
+This module contains all game strategy logic used by the player agents.
+The 
+'''
 import random
 
 debug = False
@@ -9,8 +13,11 @@ class Strateegery(object):
     def __init__(self, game_state):
         self.game_state = game_state
         
-    # Workhorse method returns all lines in the current game that have length or "rank" N
     def linesOfRankN(self, N, sequence, player):
+        '''
+        Workhorse method returns all lines in the current game that have length or "rank" N
+
+        '''
         gs = self.game_state
         size = gs.size
         lines = gs.findLines(sequence)
@@ -122,6 +129,12 @@ class Strateegery(object):
                 measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))  # game measure min player
             return measure
 
+    def isLeaf(self, sequence, player):
+        gs = self.game_state        
+        return {
+            'tie': gs.isTie(sequence),
+            'end': len(self.linesOfRankN(gs.size, sequence, player)) > 0} # True if there is a line of length size, game over
+
     ##### miniQmax #####
     def miniQMax(self, sequence, player, isleaf):
         gs = self.game_state
@@ -154,14 +167,7 @@ class Strateegery(object):
             else:
                 return val # If node is not a leaf then return the Q's value for it
         
-    #################
-
-    def isLeaf(self, sequence, player):
-        gs = self.game_state        
-        return {
-            'tie': gs.isTie(sequence),
-            'end': len(self.linesOfRankN(gs.size, sequence, player)) > 0} # True if there is a line of length size, game over
-    
+    #### minimax #####
     def minimax(self, sequence, depth, Min, Max, player, evaluate):
         gs = self.game_state
         size = gs.size
@@ -216,8 +222,7 @@ class Strateegery(object):
     
     ##########################################################
     # Original attempt at an optimal ('ideal') strategy
-    ##########################################################
-    
+    ##########################################################    
     def measureState(self, sequence, player):
         state_weight = 0
         for n in range(1,self.game_state.size):
@@ -234,8 +239,8 @@ class Strateegery(object):
         # Corner opening move tends to be stronger, hardcoded here
         if gs.step == 1:
             return random.choice([0,size-1,size**2-1,size**2-size]), player.mark
-                                 
-        # 1st priority, Block opponent from winning or win game                                                     
+
+        # 1st priority, Block opponent from winning or win game
         # 
         for strategy in ['gain', 'block']: 
             p = {'block' : opponent, 'gain' : player}[strategy]
@@ -280,7 +285,7 @@ class Strateegery(object):
 
                                         # We don't want the opponent's block, to actually form his fork OR give him a win
                                         if len(self.linesOfRankN(size, block_fork_seq, opponent)) < 1 and \
-                                           len(self.linesOfRankN(size - 1, block_fork_seq, opponent))< 2:  #no opponent wins and no opponent forks    
+                                           len(self.linesOfRankN(size - 1, block_fork_seq, opponent))< 2:  #no opponent wins and no opponent forks 
                                         
                                             # Opponent blocking our line will now ruin his fork attempt, 
                                             return index, player.mark
@@ -317,20 +322,7 @@ class Strateegery(object):
         
         #Else opponent can gain more value with his max move than current player
         #Prevent him from taking it
-        else:  
+        else:
             if debug:
                 print "measure block", max_block_index, player.mark
             return max_block_index, player.mark
-
-
-        
-# # Debugging
-# if debug:
-#     print 'game sequence: ',gs.game_sequence  
-#     print 'transform seq: ',t_sequence
-#     print 'transfrom seq: ',[(gs.transformIndex(m[0]), m[1] ) for m in gs.game_sequence ]
-#     print 'valids', valid_indices
-#     print
-#     print 'charted', [seq[-1][0] for seq in charted]
-#     print
-#     print 'uncharted', uncharted_i
