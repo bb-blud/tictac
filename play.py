@@ -463,9 +463,9 @@ def run():
     cols = ["P1 win",  "draw", "P1 loss"]
     rows = [r[0] +' v '+r[1] for r in duels]
     fintable = pd.DataFrame(ratios, columns = cols, index=rows)
-    #fintable.to_csv('../pipeQ_var1007.csv')#"miniQmax_fin.csv')
-    #fintable.plot.barh(colormap='Greens', stacked=True)
-    #plt.show()
+    # fintable.to_csv('../pipeQ.csv')#"miniQmax_fin.csv')
+    # fintable.plot.barh(colormap='Greens', stacked=True)
+    plt.show()
     print fintable
     playGames(setupGame(luckyQ, 3, ['human', 'miniQmax'], d1=2), 2,check_convergence=False, debug=True)
     
