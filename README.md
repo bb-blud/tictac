@@ -16,6 +16,6 @@ forks, blind to others. The codebase however is designed for arbitrary sized nxn
 resource consuming for anything above n = 4.  
 ## More Info
 Two different "Perfect" or near perfect players are also implemented and can be played against, but again at this point only  
-if one digs through the code. Of the two, "ideal", is pretty usable for n = 17 or so.
+if one digs through the code. Of the two, "ideal", is pretty usable for up to n = 17 or so.
 ## License
 License can be found [here](https://github.com/bb-blud/tictac/blob/master/license.txt)
