@@ -389,7 +389,8 @@ def run():
         return pipeQ
 
     start = time()
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1030)
+    QM = QMap(gamma = 0.74, alpha=0.9)
+    QM, tally, conv = playGames(setupGame(QM, size, ['random', 'random'],  learning=True), 1000)
     QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
     QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 2)
