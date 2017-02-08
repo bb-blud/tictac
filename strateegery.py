@@ -118,6 +118,13 @@ class Strateegery(object):
     ###########################################################
     # MiniMax alpha-beta pruning and supporting functions
     ###########################################################
+
+    def isLeaf(self, sequence, player):
+        gs = self.game_state        
+        return {
+            'tie': gs.isTie(sequence),
+            'win': len(self.linesOfRankN(gs.size, sequence, player)) > 0} # True if there is a line of length size, game over
+    
     def minimaxMeasure(self, sequence, player, isleaf):
         gs = self.game_state
         size = self.game_state.size
@@ -126,7 +133,7 @@ class Strateegery(object):
         if isleaf['tie']:     
             return 0
         # If current node is an endgame win
-        elif isleaf['end']:   
+        elif isleaf['win']:   
             sgn = {gs.players[0].mark : 1, gs.players[1].mark : -1}[player.mark]
             return sgn * (10*size)**4 * len(self.linesOfRankN(size, sequence, player))  # reward max/min for a player win
         else:
@@ -137,20 +144,14 @@ class Strateegery(object):
                 measure -= n * len(self.linesOfRankN(n, sequence, gs.players[1]))  # game measure min player
             return measure
 
-    def isLeaf(self, sequence, player):
-        gs = self.game_state        
-        return {
-            'tie': gs.isTie(sequence),
-            'end': len(self.linesOfRankN(gs.size, sequence, player)) > 0} # True if there is a line of length size, game over
-
     ##### miniQmax #####
     def miniQMax(self, sequence, player, isleaf):
         gs = self.game_state
         set_val = False
         
         sgn = {gs.players[0].mark : 1.0, gs.players[1].mark : -1.0}[player.mark]
-        seq = tuple(sequence)
-        val = gs.QM.Q.get(seq, None)
+        t_seq = tuple( (gs.transformIndex(i), mark) for i,mark in sequence )
+        val = gs.QM.Q.get(t_seq, None)
         
         if val is None and gs.learning:
             set_val = True  # If learning is on (during training) values are set to Q and returned
@@ -158,19 +159,19 @@ class Strateegery(object):
         # If current node is an endgame tie return 0
         if isleaf['tie']:            
             if set_val:  
-                gs.QM.Q[seq] = 0 # Setting value if learning
+                gs.QM.Q[t_seq] = 0 # Setting value if learning
             return 0
         
         # If current node is an endgame is a win return +-1
-        elif isleaf['end']:
+        elif isleaf['win']:
             if set_val:
-                gs.QM.updateQ(sequence,sgn)
+                gs.QM.updateQ(t_seq ,sgn)
             return sgn  
         else:
             # return zero of reached unexplored state (code is set for possible return of experimental values)
             if val is None:  
                 if set_val:
-                    gs.QM.Q[tuple(sequence)] = sgn * 0.
+                    gs.QM.Q[t_seq] = sgn * 0.
                 return sgn*0.
             else:
                 return val # If node is not a leaf then return the Q's value for it
@@ -183,7 +184,7 @@ class Strateegery(object):
         
         isleaf = self.isLeaf(sequence,player)
         
-        if isleaf['tie'] or isleaf['end'] or depth == 0:  # If we have reached depth limit or we are at a leaf node
+        if isleaf['tie'] or isleaf['win'] or depth == 0:  # If we have reached depth limit or we are at a leaf node
             return evaluate(sequence, player, isleaf)
 
         valid_i = [ index for index in range(size**2) if gs.validMove(index, sequence) ]

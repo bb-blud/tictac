@@ -66,8 +66,12 @@ class DecisionPlayer(Player):
         return
 #########################################################################################
 
-# Set up all parameters for a game to be played returns a GameState instance
+
 def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None, d1=2, d2=2):
+    """
+    Set up all parameters for a game to be played. Returns a GameState instance
+
+    """
     gs = GameState(game_size,  learning)
     gs.setQMap(globalQM)
     
@@ -83,8 +87,11 @@ def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1
 
     return gs
 
-##Play games and return totals for win:draw:loss divided by total games
 def getRatios(game_state, n_games, debug=False):
+    """
+    Play games and return totals for win:draw:loss divided by total games
+
+    """
     QM, tally, conv = playGames(game_state, n_games, debug=debug)
     
     ts = [1.*tally[(True, False)], 1.*tally[(False, True)], 1.*tally[(False,False)]]
@@ -92,8 +99,11 @@ def getRatios(game_state, n_games, debug=False):
     s = sum(ts)
     return [ts[0]/s, ts[2]/s, ts[1]/s]
 
-##Convenience method multiple duels can be played and an array of final ratio arrays is returned
 def fightDuels(QMs, duels, size, n_games, **kwargs):
+    """
+    Convenience method multiple duels can be played and an array of final ratio arrays is returned
+
+    """
     ratios = []
 
     p1depths = kwargs.get('p1ds', [2 for _ in range(len(duels))])
@@ -105,6 +115,13 @@ def fightDuels(QMs, duels, size, n_games, **kwargs):
     return ratios
 
 def playGames(game_state, n_games, check_convergence=True,  debug=False):
+    """
+    This function will play n_game amount of games iteratively and by
+    default check for game convergence, in which case it will exit early
+    so as to stop playing the same game repeatedly.
+
+    """
+
     ####### Tally ########
     tally = { (True, False) : 0, (False, True) : 0, (False, False) : 0 }
     is_converging = False
@@ -174,17 +191,18 @@ def multiTrain(game_state, runs, batch_size):
     def playBatch(ns, game_state, batch_size):
         gs = game_state
         for game in range(batch_size):
-            gs.setQMap(ns.QM)
+            gs.QM = ns.QM
             while not gs.game_finished:
                 gs.takeStep()
             ns.QM = gs.QM
-            gs.resetGame()     
+            gs.resetGame()
     ##   ##   ##   ##    ##   ##   ##   ##  
    
     import multiprocessing
     manager = multiprocessing.Manager()
     ns = manager.Namespace()
     ns.QM = game_state.QM
+    #ns.Q = game_state.QM.Q
     
     jobs = []
     for _ in range(runs):
@@ -246,15 +264,6 @@ def printTally(game_state, n_games):
     print "{} : {} : {}".format(ts[1]/s, ts[2]/s, ts[0]/s)
 
 
-# def breed(QM1, QM2, size, n_cycles):
-#     game_state = setupGame(QMap(), size, ['Qlearning', 'Qlearning'], learning=True, p1QM=QM1)    
-#     QM, tally, conv = playGames(game_state, n_cycles)
-
-#     game_state = setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True, p2QM=QM2)
-#     QM, tally, conv = playGames(game_state, n_cycles)
-
-#     return QM
-
 def exploreQ(QM,d):
     Q = QM.Q
     M = max(len(seq) for seq in Q.keys())
@@ -271,6 +280,7 @@ def run():
     #     pipeQ = pickle.load(f)
     # gs = setupGame(pipeQ, 3, ['human','ideal'],  d1=3)
     # playGames(gs, 1, check_convergence=False, debug=True)
+    
 ##################################################################################
 # The sections below roughly follow the order of the IPython notebook  work along
 # uncomment to run from the terminal
@@ -372,19 +382,31 @@ def run():
     with open("../newlucky.pickle") as f:
         luckyQ = pickle.load(f)
 
-    def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
-        pipeQ, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth-1, d2=depth), itrs[0])
-        pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth-1), itrs[1])
-        pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth, d2=depth),   itrs[2])
-        return pipeQ
+    # def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
+    #     pipeQ, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth-1, d2=depth), itrs[0])
+    #     pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth-1), itrs[1])
+    #     pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth, d2=depth),   itrs[2])
+    #     return pipeQ
 
+    # start = time()
+    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1030)
+    # QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
+    # QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
+    # QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 2)
+    # # #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
+
+    def multiPipe(pipeQ, size, lower, higher, batches, depth=2):
+        pipeQ = multiTrain(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth-1, d2=depth), *batches[0] )
+        pipeQ = multiTrain(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth-1), *batches[1] )
+        pipeQ = multiTrain(setupGame(pipeQ, size, [higher, higher],learning=True,d1=depth, d2=depth),   *batches[2] )
+        return pipeQ
     
     start = time()
-    QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'random'],  learning=True), 1030)
-    QM = pipeTrain(QM,size, 'random', 'Qlearning', [400, 400, 400])
-    QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 1)
-    QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[100, 100, 100], depth = 2)
-    # #QM = pipeTrain(QM,size, 'Qlearning','miniQmax',[1000, 1000, 1000], depth = 3)
+    
+    QM = multiTrain(setupGame(QMap(), size, ['random','random'], learning=True), 20, 500)
+    QM = multiPipe(QM,size, 'random', 'Qlearning', [(10,80), (10,80), (10,80)])
+    QM = multiPipe(QM,size, 'Qlearning','miniQmax',[(10,20), (10,20), (10,20)], depth = 1)
+    QM = multiPipe(QM,size, 'Qlearning','miniQmax',[(10,20), (10,20), (10,20)], depth = 2)
 
     print "training time" , time()-start
 
@@ -400,6 +422,7 @@ def run():
              ['Qlearning','miniQmax'],
              ['minimax', 'miniQmax'],
              ['ideal', 'miniQmax' ] ]
+    
     # duels = [['Qlearning', 'ideal' ],
     #          ['Qlearning', 'minimax'],
     #          ['Qlearning', 'miniQmax'],
@@ -659,28 +682,29 @@ def run():
     # Q-Learning Training  Q-Learning Training  Q-Learning Training  Q-Learning Training Q-Learning Training
     #########################################################################################################
     
-    #Seed Q with initial random games
+    # #Seed Q with initial random games
     # size = 3    
     # #ts = [70, 1000, 1000, 2000]
     # ts = [70, 200, 200, 300]
     # start = time()    
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'miniQmax'],  learning=True, d1=3,d2=3), ts[0])
-    # QM, tally, conv = playGames(setupGame(QMap(), size, ['miniQmax', 'random'],  learning=True, d1=3,d2=3), ts[0])
-    # # player 2 learning against a random player 1
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
+    # # QM, tally, conv = playGames(setupGame(QMap(), size, ['random', 'miniQmax'],  learning=True, d1=3,d2=3), ts[0])
+    # # QM, tally, conv = playGames(setupGame(QMap(), size, ['miniQmax', 'random'],  learning=True, d1=3,d2=3), ts[0])
+    # # # player 2 learning against a random player 1
+    # # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'random'],   learning=True), ts[1])
     
-    # # Now player 1 learning against a random player 2
-    # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
+    # # # Now player 1 learning against a random player 2
+    # # QM, tally, conv = playGames(setupGame(QM, size, ['random', 'Qlearning'],   learning=True), ts[2])
     
-    # # Have two agents learn against  each other
-    # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
+    # # # Have two agents learn against  each other
+    # # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'Qlearning'],learning=True), ts[3])
 
-    # print "Training time: " , time() - start  
-    # exploreQ(QM,1)
-    #####################
-    # Using Multiprocess
+    # # print "Training time: " , time() - start  
+    # # exploreQ(QM,1)
+    
+    # ###
+    # #Using Multiprocess
 
-    # Seed Q with initial random games
+    # # Seed Q with initial random games
     # start = time()
     # QM = multiTrain(setupGame(QMap(), size, ['random', 'random'], learning=True), runs=7, batch_size=10)
 
@@ -694,8 +718,8 @@ def run():
     # QM = multiTrain(setupGame(QM, size, ['Qlearning', 'Qlearning'], learning=True),runs=20, batch_size=200)
     # print "Training time: " , time() - start
 
-    ########################
-    # display "quality" table
+    
+    # # display "quality" table
     # tallies = []
     # lbls = [ ('P1 win', (True, False) ), ('P1 loss', (False, True) ), ('draw', (False, False) )]
     # QM, tally, conv = playGames(setupGame(QM, size, ['Qlearning', 'ideal']), 10, check_convergence = False)
