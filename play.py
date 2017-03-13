@@ -106,8 +106,8 @@ def fightDuels(QMs, duels, size, n_games, **kwargs):
     """
     ratios = []
 
-    p1depths = kwargs.get('p1ds', [2 for _ in range(len(duels))])
-    p2depths = kwargs.get('p2ds', [2 for _ in range(len(duels))])
+    p1depths = kwargs.get('p1ds', [2 for _ in range(len(duels))]) # get the depths for each game or set all to 2 if
+    p2depths = kwargs.get('p2ds', [2 for _ in range(len(duels))]) # depths are not specified.
         
     for i, duel in enumerate(duels):
         ratios.append(getRatios(setupGame(QMs[i], size, duel, d1 = p1depths[i], d2 = p2depths[i] ),  n_games) )

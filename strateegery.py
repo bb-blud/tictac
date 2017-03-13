@@ -47,7 +47,7 @@ class Strateegery(object):
 
     ###########################################################
     # Human player 
-    ###########################################################    
+    ###########################################################
     def humanMove(self, player):
         gs = self.game_state
         choosing = True
@@ -55,7 +55,7 @@ class Strateegery(object):
         gs.printGrid(gs.makeGrid(gs.game_sequence))
 
         while choosing:
-            index = input("type index of your next move: ")            
+            index = input("type index of your next move: ")
             if index in range(gs.size**2) and gs.validMove(index, gs.game_sequence):
                 return index, player.mark
             else:
@@ -96,7 +96,6 @@ class Strateegery(object):
         # Legal moves that lead to sequences not in Q yet
         uncharted_i = [ index for index in valid_indices if index not in [ seq[-1][0] for seq in charted ] ]
 
-       
         if uncharted_i and random.random() > threshold and gs.step > 1: # If a move hasn't been done try it, randomly
             #print 'uncharted'
             return gs.inverseTFIndex(random.choice(uncharted_i)), player.mark

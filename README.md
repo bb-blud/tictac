@@ -4,8 +4,7 @@ tictac is an exploration of Q-learning, a type of reinforcement learning, applie
 
 ## Documentation
 A substantially detailed explanation of the ideas and motivation behind the code can be found right in this repository in
-the form of a [pdf report](https://github.com/bb-blud/tictac/blob/master/report.pdf). There is also an accompanying 
-IPython notebook that can be used to follow along when reading report.pdf (it is pretty tldr inducing, but whatevs, maybe for the curious).
+the form of a [pdf report](https://github.com/bb-blud/tictac/blob/master/report.pdf) (It can be a pretty tedious read, but for the curious).
 ## Usage
 The state of the code at this moment unfortunately is pretty user unfriendly :(  
 However by downloading the files and running;  
