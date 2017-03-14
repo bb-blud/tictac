@@ -1,6 +1,9 @@
-import importlib
+from kivy.app import App
+from kivy.widget import Widget
+# import importlib
 
-class GameBoard(object):
+
+class GameBoard(Widget):
 
     screen_size = (800, 600)
     colors = {
@@ -15,32 +18,41 @@ class GameBoard(object):
         'orange'  : (255, 128,   0)
     }
 
-    def __init__(self, display=True):
-        self.display = display
-        self.done = False
 
-        if self.display:
-            try:
-                self.pygame = importlib.import_module('pygame')
-                self.pygame.init()
-                self.screen = self.pygame.display.set_mode(self.screen_size)
-            except ImportError as e:
-                self.display = False
-                print "Simulator.__init__(): Unable to import pygame; display disabled.\n{}: {}".format(e.__class__.__name__, e)
-            except Exception as e:
-                self.display = False
-                print "Simulator.__init__(): Error initializing GUI objects; display disabled.\n{}: {}".format(e.__class__.__name__, e)
+class tictacApp(App):
+    def build(self):
+        game = GameBoard()
+        return game
 
-    def run(self):
-        while not self.done:
-            try:
-                for event in self.pygame.event.get():
-                    if event.type == self.pygame.QUIT:
-                        self.done = True
-                self.pygame.display.flip()
+# if __name__ == "__main__":
+#     tictacApp.run()
+
+    # def __init__(self, display=True):
+    #     self.display = display
+    #     self.done = False
+
+    #     if self.display:
+    #         try:
+    #             self.pygame = importlib.import_module('pygame')
+    #             self.pygame.init()
+    #             self.screen = self.pygame.display.set_mode(self.screen_size)
+    #         except ImportError as e:
+    #             self.display = False
+    #             print "Simulator.__init__(): Unable to import pygame; display disabled.\n{}: {}".format(e.__class__.__name__, e)
+    #         except Exception as e:
+    #             self.display = False
+    #             print "Simulator.__init__(): Error initializing GUI objects; display disabled.\n{}: {}".format(e.__class__.__name__, e)
+
+    # def run(self):
+    #     while not self.done:
+    #         try:
+    #             for event in self.pygame.event.get():
+    #                 if event.type == self.pygame.QUIT:
+    #                     self.done = True
+    #             self.pygame.display.flip()
                 
-            except Exception as e:
-                print "WTF: {}".format(e.__class__.__name__,e)
+    #         except Exception as e:
+    #             print "WTF: {}".format(e.__class__.__name__,e)
                                       
            
                 

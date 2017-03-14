@@ -4,54 +4,6 @@ about the state of a game is stored and modified here.
 
 """
 
-class Player(object):
-    """
-    A basic player class to form the basis of player agents.
-    """
-    mark = None
-    
-    def __init__(self, mark, game_state):
-        self.game_state = game_state
-        self.mark = mark
-        self.is_winner = False
-        
-    def makeMove(self):
-        pass
-
-class QMap(object):
-    """
-    Contains the Q dictionary and methods for updating its keys
-    and values.  
-    """
-   
-    def __init__(self, gamma=0.1, alpha=0.1):
-        self.Q = {}
-        # Learning rates for Q learning
-        self.gamma = gamma # For discounted sums
-        self.alpha = alpha # For temporal difference
-        
-    def visitQ(self, sequence):
-        # Add a new game sequence as a key to the dictionary initialized with value 0
-        if not self.Q.get(sequence, False):
-            self.Q[sequence] = 0
-
-    # Q-learning update of the Q dictionary
-    def updateQ(self, game, sgn, weight =1):
-        
-        n = len(game)
-        alpha = self.alpha 
-            
-        reward = sgn#* weight**4 / n
-            
-        for i in range(1, len(game)):
-            sub_sequence = tuple(game[:i])
-
-            # Temporal-difference
-            V = self.Q.get(sub_sequence, 0)
-            X = sum([reward * self.gamma**(k-i) for k in range(i, len(game)) ]) #(n-i) * reward * self.gamma**(i-1)#
-                
-            self.Q[sub_sequence] = (1-alpha) * V + alpha * X            
-
 class GameState(object):
     """
     Contains the entire state of the game, cosisting of a sequence of moves,
