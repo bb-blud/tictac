@@ -1,10 +1,8 @@
 from kivy.app import App
-from kivy.widget import Widget
+from kivy.uix.widget import Widget
 # import importlib
 
-
 class GameBoard(Widget):
-
     screen_size = (800, 600)
     colors = {
         'black'   : (  0,   0,   0),
@@ -17,13 +15,16 @@ class GameBoard(Widget):
         'yellow'  : (255, 255,   0),
         'orange'  : (255, 128,   0)
     }
-
-
-class tictacApp(App):
+    pass
+    
+class TicTacApp(App):
     def build(self):
         game = GameBoard()
         return game
 
+if __name__ == '__main__':
+    TicTacApp().run()
+    
 # if __name__ == "__main__":
 #     tictacApp.run()
 
