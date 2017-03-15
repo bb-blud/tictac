@@ -4,6 +4,11 @@ play multiple games, graph statistics, as well as some diagnostic
 printout functions.
 
 """
+import numpy as np
+from collections import deque
+import matplotlib.pyplot as plt
+from game_state import GameState
+from player_agent import DecisionPlayer, QMap
 
 def setupGame(globalQM, game_size, policies, learning=False, marks=['X','O'], p1QM=None, p2QM=None, d1=2, d2=2):
     """

@@ -5,8 +5,9 @@ DecisionPlayer which inherits and expands upon Player,
 and the QMap class
 
 """
-# from game_state import GameState
-# from strateegery import Strateegery
+
+
+from strateegery import Strateegery
 
 class Player(object):
     """

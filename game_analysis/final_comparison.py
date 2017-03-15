@@ -2,13 +2,10 @@ import sys
 sys.path.append("../")
 
 import pickle
+import pandas as pd
 from time import time
-
-from game_state import GameState
-from player_agent import DecisionPlayer
-from player_agent import QMap
-
 from utilities import *
+
 
 ###################################################
 # Final game strategy comparison miniQmax centric
@@ -16,10 +13,9 @@ from utilities import *
 
 def run():
     size = 3
-    with open("./newlucky.pickle") as f:
+    with open("../Qs/newlucky.pickle") as f:
         luckyQ = pickle.load(f)
 
-        
     def pipeTrain(pipeQ, size, lower, higher, itrs, depth=2):
         pipeQ, _, _ = playGames(setupGame(pipeQ, size, [lower, higher], learning=True,d1=depth-1, d2=depth), itrs[0])
         pipeQ, _, _ = playGames(setupGame(pipeQ, size, [higher,lower ], learning=True,d1=depth, d2=depth-1), itrs[1])
@@ -82,7 +78,7 @@ def run():
     ratios.append(getRatios(setupGame(QM, size, duels[8], d2=2              ), 100))
 
     print "total time: ", time() - start
-    # with open("../pipeQ.pickle", 'wb') as f:
+    # with open("../Qs/pipeQ.pickle", 'wb') as f:
     #     pickle.dump(QM, f, pickle.HIGHEST_PROTOCOL)
         
     cols = ["P1 win",  "draw", "P1 loss"]

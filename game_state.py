@@ -4,6 +4,8 @@ about the state of a game is stored and modified here.
 
 """
 
+from player_agent import QMap
+
 class GameState(object):
     """
     Contains the entire state of the game, cosisting of a sequence of moves,
