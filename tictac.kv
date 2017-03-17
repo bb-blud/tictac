@@ -1,0 +1,22 @@
+#:kivy 1.9.1
+
+<SelectScreen>
+	orientation:'vertical'
+	BoxLayout:
+		size_hint: (1, .8)
+		orientation:'horizontal'
+		
+		StrategyList:
+			size_hint: (.4, 1)	
+		Label:
+			size_hint: (.2, 1)	
+			text:"VS"
+		StrategyList:
+			size_hint: (.4, 1)	
+			
+	Button:
+		size_hint:(1, .2)
+		text:"Start"
+
+<StrategyList>
+	orientation:'vertical'
