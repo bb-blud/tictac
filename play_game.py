@@ -4,6 +4,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.button import Button
 from kivy.uix.label import Label
 
 from utilities import *
@@ -28,13 +29,28 @@ strategies = ['ideal',
               'learner']
 
 class SelectScreen(BoxLayout):
-    pass
+    
+    def whichChoice(self, choices):
+        button = [choice for choice in choices if choice.pressed][0]
+        return button.text
+    
+    def takeGameChoices(self, p1_choices, p2_choices):        
+        print "User text input was: " + self.ids['user_text_input'].text
+        print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
+        
+class StrategyList(BoxLayout):
+    
+    def __init__(self, **kwargs):
+        super(StrategyList, self).__init__(**kwargs)        
+        self.strat_buttons = [ListButton(text=strategy,root=self) for strategy in strategies]
 
-class SelectButton(ButtonBehavior, Label):
+        for b in self.strat_buttons:
+            self.add_widget(b)
+            
+class ListButton(ButtonBehavior, Label):
     def __init__(self, root,**kwargs):
-        super(SelectButton, self).__init__(**kwargs)
+        super(ListButton, self).__init__(**kwargs)
         self.pressed = False
-        self.font_size = 40
         self.root = root
         
     def on_press(self):
@@ -49,18 +65,7 @@ class SelectButton(ButtonBehavior, Label):
         self.color = text_color + [1]
         print text_color
 
-class StrategyList(BoxLayout):
-    
-    def __init__(self, **kwargs):
-        super(StrategyList, self).__init__(**kwargs)        
-        self.strat_buttons = [SelectButton(text=strategy,root=self) for strategy in strategies]
 
-        for b in self.strat_buttons:
-            self.add_widget(b)
-
-    def check_toggle(self):
-        for b in self.strat_buttons:
-            print b.pressed
 class GameBoard(GridLayout):
 
     def __init__(self, game_size=3):
@@ -68,7 +73,7 @@ class GameBoard(GridLayout):
         self.game_size = game_size
         
         for i in range(self.game_size**2):
-            self.add_widget(ButtonBehavior(text=str(i)))
+            self.add_widget(Button(text=str(i)))
 
 class TicTacApp(App):
     
