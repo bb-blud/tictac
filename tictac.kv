@@ -1,70 +1,80 @@
 #:kivy 1.9.1
 
-<SelectScreen>
-	orientation:'vertical'
-	font_size: 30
-
+<TictacScreenManager>
+	SelectScreen:
+	GameBoard:
+	
+<SelectScreen>	
+	name:'select_screen'
+	size_of_font: 30
 	BoxLayout:
-		id: enter_size
-		orientation: 'horizontal'
-		size_hint:(1, 0.1)
-
-		Label:			
-			text: "Enter game size:"
-			font_size: root.font_size
-			color: (0, 255, 1, 0.9)
-			size_hint: (0.4, 1)
-		TextInput:
-			id: user_text_input
-			hint_text: "(2 < N < 10)"
-			font_size: root.font_size
-			cursor_color: (255, 0, 0, 1)
-			multiline: False
-			size_hint: (0.2, 1)
-		Widget:
-			size_hint: (0.4, 1)
-
-	BoxLayout:
-		orientation: 'horizontal'
-		size_hint: (1, 0.1)
-		Label:			
-			text: "Player X"
-			color: (0, 255, 1, 0.9)
-			font_size: root.font_size*1.2
-			size_hint: (0.4, 1)
-		Label:
-			size_hint: (0.2, 1)
-		Label:
-			text: "Player O"
-			color: (0, 255, 1, 0.9)
-			font_size: root.font_size*1.2
-			size_hint: (0.4, 1)
-			
-	BoxLayout:
-		id: list_vs_list
-		size_hint: (1, 0.7)
-		orientation:'horizontal'
-		
-		StrategyList:
-			id:p1_choices
-			size_hint: (0.4, 1)	
-		Label:			
-			text:"VS"
-			font_size: root.font_size
-			size_hint: (0.2, 1)	
-		StrategyList:
-			id:p2_choices
-			size_hint: (0.4, 1)	
-			
-	Button:
-		id: start_butt		
-		text:"Start"
-		font_size: root.font_size
-		background_color: (0, 255, 1, 0.9)
-		on_press: root.takeGameChoices(p1_choices.strat_buttons, p2_choices.strat_buttons)
-		size_hint:(1, 0.1)
+		orientation:'vertical'
 
 
+		BoxLayout:
+			id: enter_size
+			orientation: 'horizontal'
+			size_hint:(1, 0.1)
+
+			Label:
+				text: "Enter game size:"
+				font_size: root.size_of_font
+				color: (0, 255, 1, 0.9)
+				size_hint: (0.4, 1)
+			TextInput:
+				id: user_text_input
+				hint_text: "(2 < N < 10)"
+				font_size: root.size_of_font
+				cursor_color: (255, 0, 0, 1)
+				multiline: False
+				size_hint: (0.2, 1)
+			Widget:
+				size_hint: (0.4, 1)
+
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint: (1, 0.1)
+			Label:
+				text: "Player X"
+				color: (0, 255, 1, 0.9)
+				font_size: root.size_of_font*1.2
+				size_hint: (0.4, 1)
+			Label:
+				size_hint: (0.2, 1)
+			Label:
+				text: "Player O"
+				color: (0, 255, 1, 0.9)
+				font_size: root.size_of_font*1.2
+				size_hint: (0.4, 1)
+
+		BoxLayout:
+			id: list_vs_list
+			size_hint: (1, 0.7)
+			orientation:'horizontal'
+
+			StrategyList:
+				id:p1_choices
+				size_hint: (0.4, 1)
+			Label:
+				text:"VS"
+				font_size: root.size_of_font
+				size_hint: (0.2, 1)
+			StrategyList:
+				id:p2_choices
+				size_hint: (0.4, 1)
+
+		Button:
+			id: start_butt
+			text:"Start"
+			font_size: root.size_of_font
+			on_release: root.manager.current = 'game_board'
+			background_color: (0, 255, 1, 0.9)
+			# on_press: root.takeGameChoices(p1_choices.strat_buttons, p2_choices.strat_buttons)
+			size_hint:(1, 0.1)
+
+<GameBoard>
+	name:'game_board'
+	
 <StrategyList>
 	orientation:'vertical'
 	

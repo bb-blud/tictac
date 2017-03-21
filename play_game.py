@@ -1,5 +1,7 @@
 from kivy.app import App
 
+from kivy.uix.screenmanager import ScreenManager, Screen
+
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 
@@ -28,25 +30,42 @@ strategies = ['ideal',
               'human',
               'learner']
 
-class SelectScreen(BoxLayout):
+class TictacScreenManager(ScreenManager):
+    pass
+
+class SelectScreen(Screen):
     
     def whichChoice(self, choices):
         button = [choice for choice in choices if choice.pressed][0]
         return button.text
     
-    def takeGameChoices(self, p1_choices, p2_choices):        
+    def takeGameChoices(self, p1_choices, p2_choices):
         print "User text input was: " + self.ids['user_text_input'].text
         print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
+        
+class GameBoard(Screen):
+
+    def __init__(self, game_size=3, **kwargs):
+        super(Screen, self).__init__(**kwargs)
+        self.game_size = game_size
+
+        # Generate Grid
+        self.grid = GridLayout(cols=game_size)            
+        for i in range(self.game_size**2):
+            self.grid.add_widget(Button(text=str(i)))
+
+        #Add Grid to Gameboard Screen
+        self.add_widget(self.grid)
         
 class StrategyList(BoxLayout):
     
     def __init__(self, **kwargs):
-        super(StrategyList, self).__init__(**kwargs)        
+        super(StrategyList, self).__init__(**kwargs)
         self.strat_buttons = [ListButton(text=strategy,root=self) for strategy in strategies]
 
         for b in self.strat_buttons:
             self.add_widget(b)
-            
+
 class ListButton(ButtonBehavior, Label):
     def __init__(self, root,**kwargs):
         super(ListButton, self).__init__(**kwargs)
@@ -66,30 +85,11 @@ class ListButton(ButtonBehavior, Label):
         print text_color
 
 
-class GameBoard(GridLayout):
-
-    def __init__(self, game_size=3):
-        super(GameBoard, self).__init__(cols=game_size)
-        self.game_size = game_size
-        
-        for i in range(self.game_size**2):
-            self.add_widget(Button(text=str(i)))
-
 class TicTacApp(App):
-    
+
     def build(self):
-        game = SelectScreen()#GameBoard(5)
+        game = TictacScreenManager()#SelectScreen()#GameBoard(5)
         return game
 
 if __name__ == '__main__':
     TicTacApp().run()
-
-
-    # layout = BoxLayout(orientation='vertical')
-    # btn1 = Label(text='Hello')
-    # btn2 = Label(text='World')
-    # layout.add_widget(btn1)
-    # layout.add_widget(btn2)
-    # return layout
-
-    # screen_size = (800, 600)
