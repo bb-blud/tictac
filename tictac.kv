@@ -10,7 +10,6 @@
 	BoxLayout:
 		orientation:'vertical'
 
-
 		BoxLayout:
 			id: enter_size
 			orientation: 'horizontal'
@@ -67,14 +66,10 @@
 			id: start_butt
 			text:"Start"
 			font_size: root.size_of_font
-			on_release: root.manager.current = 'game_board'
+			on_press: root.sanitizeGameChoices(p1_choices.strat_buttons, p2_choices.strat_buttons)
 			background_color: (0, 255, 1, 0.9)
-			# on_press: root.takeGameChoices(p1_choices.strat_buttons, p2_choices.strat_buttons)
 			size_hint:(1, 0.1)
 
-<GameBoard>
-	name:'game_board'
-	
 <StrategyList>
 	orientation:'vertical'
 	

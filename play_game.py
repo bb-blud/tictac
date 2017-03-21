@@ -39,9 +39,26 @@ class SelectScreen(Screen):
         button = [choice for choice in choices if choice.pressed][0]
         return button.text
     
-    def takeGameChoices(self, p1_choices, p2_choices):
-        print "User text input was: " + self.ids['user_text_input'].text
+    def sanitizeGameChoices(self, p1_choices, p2_choices):
+        user_text = self.ids['user_text_input'].text
+        print "User text input was: " + user_text
+        try:
+            game_size = int(user_text)
+            if game_size > 2 and game_size < 10:
+                self.makeGameAndSwitch(game_size)
+            else:
+                raise ValueError('Integer out of range')
+        except ValueError:
+            self.ids['start_butt'].text = "Game size must be an integer between 2 and 10 exclusive"
+            return -1, False
         print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
+
+    def makeGameAndSwitch(self, g_size):
+        gb = GameBoard(game_size=g_size)
+        gb.name = 'game_board'
+        self.manager.add_widget(gb)
+        self.manager.current = 'game_board'
+        
         
 class GameBoard(Screen):
 
@@ -50,7 +67,7 @@ class GameBoard(Screen):
         self.game_size = game_size
 
         # Generate Grid
-        self.grid = GridLayout(cols=game_size)            
+        self.grid = GridLayout(cols=game_size)
         for i in range(self.game_size**2):
             self.grid.add_widget(Button(text=str(i)))
 
@@ -61,29 +78,29 @@ class StrategyList(BoxLayout):
     
     def __init__(self, **kwargs):
         super(StrategyList, self).__init__(**kwargs)
-        self.strat_buttons = [ListButton(text=strategy,root=self) for strategy in strategies]
+        self.strat_buttons =                                                  \
+        [ListButton(text=strategy,root_widget=self) for strategy in strategies]
 
         for b in self.strat_buttons:
             self.add_widget(b)
 
 class ListButton(ButtonBehavior, Label):
-    def __init__(self, root,**kwargs):
+    def __init__(self, root_widget,**kwargs):
         super(ListButton, self).__init__(**kwargs)
         self.pressed = False
-        self.root = root
+        self.root_widget = root_widget
         
     def on_press(self):
         self.pressed = not self.pressed
         text_color = {  False: colors['white'],
                         True: colors['blue'] } [self.pressed]
-        for b in self.root.strat_buttons:
+        for b in self.root_widget.strat_buttons:
             if b != self:
                 b.pressed = False
                 b.color = colors['white'] + [1]
                 
         self.color = text_color + [1]
         print text_color
-
 
 class TicTacApp(App):
 
