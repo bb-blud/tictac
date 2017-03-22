@@ -4,6 +4,7 @@ play multiple games, graph statistics, as well as some diagnostic
 printout functions.
 
 """
+import pickle
 import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
