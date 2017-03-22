@@ -104,7 +104,7 @@ class GameBoard(Screen):
         self.G = game
         self.tiles =                                        \
         [BoardTile(text=str(i)) for i in range(game_size**2)]
-        print "MARKSMARKS", [p.mark for p in self.G.players]
+
         # Generate Grid
         self.grid = GridLayout(cols=game_size)
         for tile in self.tiles:
@@ -124,9 +124,6 @@ class GameBoard(Screen):
 
 class BoardTile(ButtonBehavior, Label):
     pass
-    # def __init__(self, **kwargs):
-    #     super(BoardTile, self).__init__(**kwargs)
-        
         
 class StrategyList(BoxLayout):
     
