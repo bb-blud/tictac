@@ -2,6 +2,7 @@ from kivy.app import App
 from kivy.clock import Clock
 
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.popup import Popup
 
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -29,10 +30,23 @@ strategies = ['ideal',
               'Qlearning',
               'miniQmax',
               'human',
-              'learner']
+              'train-miniQmax']
+
+### MESSAGES ###
+noQs_message = "Currently only 3x3 game Q's have been trained for miniQmax\n"      +  \
+               "and Q-learning. Although  miniQmax can still perform reasonably\n" +  \
+               "well with its 3x3 Q on a 4x4 game, don't expect smarts for size > 4 :(\n" +  \
+               "However!! You can train your own miniQmax Q  by choosing train-miniQmax!!"
+
+NA_gamesize_message = "Game size must be an integer between 2 and 10 exclusive"
+
+
 
 # Default game in absence of player choice
 default_game = setupGame(QMap(), 3, ['ideal', 'ideal'])
+
+## So that user is greeted only once
+greeted = False
 
 ## Load pre-trained Q maps
 with open("./Qs/newlucky.pickle", 'rb') as f:
@@ -51,6 +65,18 @@ class TictacScreenManager(ScreenManager):
 
 class SelectScreen(Screen):
     
+    def greet(self):
+        global greeted
+        user_text = self.ids['user_text_input'].text
+        
+        if user_text not in ['', '3'] and not greeted:
+            greeted = True
+            popup =Popup(title='Hi!',
+                         title_size = '60sp',
+                         content=Label(text=noQs_message, font_size='15sp'),
+                         size_hint=(0.8, 0.4), size=(400,400))
+            popup.open()
+    
     def whichChoice(self, choices):
         choice = [button for button in choices if button.pressed]
         if choice:
@@ -60,7 +86,6 @@ class SelectScreen(Screen):
     
     def sanitizeGameChoices(self, p1_choices, p2_choices):
         user_text = self.ids['user_text_input'].text
-        print "User text input was: " + user_text
         try:
             game_size = int(user_text)
             
@@ -73,7 +98,11 @@ class SelectScreen(Screen):
             else:
                 raise ValueError('Integer out of range')
         except ValueError:
-            self.ids['start_butt'].text = "Game size must be an integer between 2 and 10 exclusive"
+            popup =Popup(title='Invalid Game Size',
+                         title_size = '20sp',
+                         content=Label(text= NA_gamesize_message),
+                         size_hint=(0.8, 0.4))
+            popup.open()
             
         print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
 
