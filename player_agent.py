@@ -69,7 +69,10 @@ class DecisionPlayer(Player):
     """
     
     def __init__(self, mark, game_state, policy, depth=2):
-        super(DecisionPlayer, self).__init__(mark, game_state)
+        super(DecisionPlayer, self).__init__(mark, game_state)        
+        if policy == 'train-miniQmax':
+            policy = 'miniQmax' # 'train' prefix was used only to set GameState learning to True
+            
         self.policy = policy
         self.strategies  = Strateegery(self.game_state)
         self.depth = depth
@@ -86,7 +89,6 @@ class DecisionPlayer(Player):
             'miniQmax' : self.strategies.minimaxMove,
 
             'human'    : self.strategies.humanMove,
-            'train-miniQmax' : self.strategies.ideal,
             'debug'    : self.debug}[self.policy]  # Player's policy dictates what function is called in strateegery
         
         if self.policy in ['minimax', 'miniQmax']:

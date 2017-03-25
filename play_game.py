@@ -71,9 +71,9 @@ class TictacScreenManager(ScreenManager):
         else:
             self.stopClock()
             game_board.endGamePopup()
+            self.resetGame()
         
-            
-    def resetGame(self, arg):
+    def resetGame(self):
         global game_has_finished
         game_has_finished = False
         self.switch_to(SelectScreen())
@@ -163,13 +163,18 @@ class BoardTile(ButtonBehavior, Label):
     def __init__(self,game_board, **kwargs):
         super(BoardTile, self).__init__(**kwargs)
         self.game_board = game_board
+        self.tile_is_set = False
+        self.can_resume = False
         
     def on_press(self):
-        self.game_board.G.current_player.strategies.human_move_index = int(self.text)
-        self.game_board.updateBoard()
+        if not self.tile_is_set: # Clicking on activated tiles results in no action
+            self.game_board.G.current_player.strategies.human_move_index = int(self.text)
+            self.game_board.updateBoard()
+            self.can_resume = True
         
     def on_release(self):
-        self.game_board.manager.startClock()
+        if self.can_resume:
+            self.game_board.manager.startClock()
         
         
 class GameBoard(Screen):
@@ -198,8 +203,18 @@ class GameBoard(Screen):
                 self.tiles[position].color = colors['blue'] + [1]
                 self.tiles[position].text = mark
                 self.tiles[position].font_size = self.tiles[0].width * 0.8
+                self.tiles[position].tile_is_set = True
         else:
-           game_has_finished = True          
+           game_has_finished = True
+           
+           #######################################################
+           # Save Q map if at least one policy was train-miniQmax
+           if self.G.learning:
+               print "GOING TO SAVE"
+               N = str(self.game_size)              
+               with open('./Qs/train-miniQmax_'+N+'X'+N+'.pickle', 'wb') as f:
+                   pickle.dump(self.G.QM, f, pickle.HIGHEST_PROTOCOL)
+                   
            
     def endGamePopup(self,end_text="finished"):
         def popIt(endmess=end_text):
@@ -210,7 +225,6 @@ class GameBoard(Screen):
                          auto_dismiss=False,
                          size_hint=(0.8, 0.4), size=(400,400))
             content.bind(on_press=popup.dismiss)
-            content.bind(on_release=self.manager.resetGame)
             popup.open()  
         
         p1, p2 = self.G.players
