@@ -199,8 +199,7 @@ class GameBoard(Screen):
                 self.tiles[position].text = mark
                 self.tiles[position].font_size = self.tiles[0].width * 0.8
         else:
-           game_has_finished = True
-
+           game_has_finished = True          
            
     def endGamePopup(self,end_text="finished"):
         def popIt(endmess=end_text):

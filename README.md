@@ -6,11 +6,10 @@ tictac is an exploration of Q-learning, a type of reinforcement learning, applie
 A substantially detailed explanation of the ideas and motivation behind the code can be found right in this repository in
 the form of a [pdf report](https://github.com/bb-blud/tictac/blob/master/report.pdf) (It can be a pretty tedious read, but for the curious).
 ## Usage
-tictac now sports a Kivy based gui were you can select a game size and strategies for the two players. As of this update to README
-I haven't yet included human player input, though one can pit and observe the different playing agent strategies.
-Simply by downloading the files and running;  
+tictac now sports a Kivy based gui were you can select a game size and strategies for the two players. You can play against any of the strategies yourself by choosing _'human'_ or you can pit and observe the machine agents playing against themselves.
+You can fire up the gui by downloading the files and running;  
 `python2.7 play_game.py`   
-in your shell, will fire up the gui. You can also check out the inner workings of the project by running the python scripts inside the [game_analysis](https://github.com/rortms/tictac/tree/master/game_analysis) folder. There you can train and compare agents programatically and reproduce the statistics seen in the report.
+in your shell. You can also check out the inner workings of the project by running the python scripts inside the [game_analysis](https://github.com/rortms/tictac/tree/master/game_analysis) folder. There you can train and compare agents programatically and reproduce the statistics seen in the report.
 
 ## More Info
 There are two different Q-learning based "brains" that have already been trained for 3x3 gameplay. Of the two miniQmax was the most successful. It is reasonably smart, it can spot some forks, blind to others. The codebase however is designed for arbitrary sized nxn tictactoe, though training becomes very resource consuming for anything above n = 4. Two different "Perfect" or near perfect players are also implemented and can be played against.  Of the two, "ideal", is pretty usable for up to n = 17 or so. The other, is basically an implementation of minimax with alpha-beta pruning applied to tictactoe, which is slow for anything above n=5. Ideal and minimax are hardcoded algorithms and did not involve any type of machine learning. I used them as benchmarks basically as I explored the reinforcement learning problem.
