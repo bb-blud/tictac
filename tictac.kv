@@ -1,7 +1,6 @@
 #:kivy 1.9.1
 
 <TictacScreenManager>
-	time2move: False
 	SelectScreen:		
 	GameBoard:
 	
@@ -71,7 +70,7 @@
 			text:"Start"
 			font_size: root.size_of_font
 			on_press: root.sanitizeGameChoices(p1_choices.strat_buttons, p2_choices.strat_buttons)
-			on_release: root.startGame()
+			# on_release: root.startGame()
 			background_color: (0, 255, 1, 0.9)
 			size_hint:(1, 0.1)
 
