@@ -53,7 +53,6 @@ greeted = False
 game_has_finished = False
 ########################################################
 
-
 class TictacScreenManager(ScreenManager):
     def __init__(self, **kwargs):
         super(TictacScreenManager, self).__init__(**kwargs)        
@@ -73,19 +72,7 @@ class TictacScreenManager(ScreenManager):
         game_has_finished = False        
         self.switch_to(SelectScreen())
 
-class SelectScreen(Screen):
-    
-    def greet(self):
-        global greeted
-        user_text = self.ids['user_text_input'].text
-        
-        if user_text not in ['', '3'] and not greeted:
-            greeted = True
-            popup =Popup(title='Hi!',
-                         title_size = '60sp',
-                         content=Label(text=noQs_message, font_size='15sp'),
-                         size_hint=(0.8, 0.4), size=(400,400))
-            popup.open()
+class SelectScreen(Screen):    
     
     def whichChoice(self, choices):
         choice = [button for button in choices if button.pressed]
@@ -94,30 +81,30 @@ class SelectScreen(Screen):
         else:
             return "ideal"
     
-    def sanitizeGameChoices(self, p1_choices, p2_choices):
+    def sanitizeTextInput(self):
         user_text = self.ids['user_text_input'].text
-        try:
-            game_size = int(user_text)
+        if user_text not in ['', 3] :
+            try:
+                N = int(user_text)
+                if N > 2 and N < 10:                
+                    self.ready2go = True
+                    self.game_size = N
+                else:
+                    self.ready2go = False
+                    raise ValueError('Integer out of range')
+            except ValueError:
+                self.ready2go = False
+                popup =Popup(title='Invalid Game Size',
+                             title_size = '20sp',
+                             content=Label(text= NA_gamesize_message),
+                             size_hint=(0.8, 0.4))
+                popup.open()
             
-            if game_size > 2 and game_size < 10:                
-                self.makeGameAndSwitch(game_size,
-                                      [self.whichChoice(p1_choices),
-                                       self.whichChoice(p2_choices)])
-                self.ready2go = True
-                
-            else:
-                raise ValueError('Integer out of range')
-        except ValueError:
-            popup =Popup(title='Invalid Game Size',
-                         title_size = '20sp',
-                         content=Label(text= NA_gamesize_message),
-                         size_hint=(0.8, 0.4))
-            popup.open()
-            
-        print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
+       #print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
 
-    def makeGameAndSwitch(self, g_size, policies):
-        N = str(g_size)
+    def makeGameAndSwitch(self, player_choices):
+        N = str(self.game_size)
+        policies = [self.whichChoice(ch) for ch in player_choices]
         
         # Setup game
         Q_loader = { 'Qlearning' : self.loadQ('newlucky'),
@@ -130,13 +117,13 @@ class SelectScreen(Screen):
 
         if 'train-miniQmax' in policies:
             global_QM = Q_loader['train-miniQmax']
-            game = setupGame(global_QM, g_size, policies, p1QM=QM1,p2QM=QM2, learning=True)
+            game = setupGame(global_QM, self.game_size, policies, p1QM=QM1,p2QM=QM2, learning=True)
 
         else:
-            game = setupGame(QMap(), g_size, policies, p1QM=QM1,p2QM=QM2)
+            game = setupGame(QMap(), self.game_size, policies, p1QM=QM1,p2QM=QM2)
 
         # Create board widget
-        gb = GameBoard(game, game_size=g_size,name='game_board')
+        gb = GameBoard(game, game_size=self.game_size,name='game_board')
         self.manager.switch_to(gb)
         self.manager.startGame()
 
