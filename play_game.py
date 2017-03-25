@@ -82,13 +82,21 @@ class SelectScreen(Screen):
             return "ideal"
     
     def sanitizeTextInput(self):
+        global greeted
         user_text = self.ids['user_text_input'].text
         if user_text not in ['', 3] :
             try:
                 N = int(user_text)
-                if N > 2 and N < 10:                
+                if N > 2 and N < 10:
                     self.ready2go = True
                     self.game_size = N
+                    if N > 3:
+                        if not greeted:
+                            Popup(title='Hi!',
+                                  title_size='50sp',
+                                  content=Label(text=noQs_message),
+                                  size_hint=(0.8,0.4)).open()
+                        greeted = True
                 else:
                     self.ready2go = False
                     raise ValueError('Integer out of range')
