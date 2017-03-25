@@ -66,13 +66,13 @@
 				id:p2_choices
 				size_hint: (0.4, 1)
 
-		Button:
+		GreenButton:
 			id: start_butt
 			text:"Start"
 			font_size: root.size_of_font
 			on_press: root.makeGameAndSwitch([p1_choices.strat_buttons, p2_choices.strat_buttons])
 			# on_release: root.startGame()
-			background_color: (0, 255, 1, 0.9)
+			# background_color: (0, 255, 1, 0.9)
 			size_hint:(1, 0.1)
 
 <StrategyList>
@@ -83,3 +83,7 @@
 	
 <BoardTile>
 	font_size:9
+	
+<GreenButton>
+	background_color: (0, 255, 1, 0.9)
+	size_hint:(1, 0.4)

@@ -176,7 +176,7 @@ class GameBoard(Screen):
            
     def endGamePopup(self,end_text="finished"):
         def popIt(endmess=end_text):
-            content=Button(text=endmess, font_size='30sp')
+            content=GreenButton(text=endmess, font_size='30sp')
             popup =Popup(title='Game Finished',
                          title_size = '50sp',
                          content=content,
@@ -194,9 +194,6 @@ class GameBoard(Screen):
             popIt(winner.mark + " WINS!")
 
 
-class BoardTile(ButtonBehavior, Label):
-    pass
-        
 class StrategyList(BoxLayout):
     
     def __init__(self, **kwargs):
@@ -224,6 +221,12 @@ class ListButton(ButtonBehavior, Label):
                 
         self.color = text_color + [1]
         print text_color
+        
+class BoardTile(ButtonBehavior, Label):
+    pass
+
+class GreenButton(Button):
+    pass
 
 class TicTacApp(App):
     
