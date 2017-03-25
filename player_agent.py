@@ -86,6 +86,7 @@ class DecisionPlayer(Player):
             'miniQmax' : self.strategies.minimaxMove,
 
             'human'    : self.strategies.humanMove,
+            'train-miniQmax' : self.strategies.ideal,
             'debug'    : self.debug}[self.policy]  # Player's policy dictates what function is called in strateegery
         
         if self.policy in ['minimax', 'miniQmax']:

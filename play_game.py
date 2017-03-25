@@ -25,7 +25,8 @@ colors = {
     'orange'  : [255, 128,   0]
 }
 
-strategies = ['ideal',
+strategies = ['random',
+              'ideal',
               'minimax',
               'Qlearning',
               'miniQmax',
@@ -48,20 +49,24 @@ default_game = setupGame(QMap(), 3, ['ideal', 'ideal'])
 ## So that user is greeted only once
 greeted = False
 
-## Load pre-trained Q maps
-with open("./Qs/newlucky.pickle", 'rb') as f:
-    luckyQ = pickle.load(f)
-with open("./Qs/pipeQ.pickle", 'rb') as f:
-    pipeQ = pickle.load(f)
-
-    
+## To handle end of game event
+game_has_finished = False
 ######################################################
 
 
 class TictacScreenManager(ScreenManager):
+    def __init__(self, **kwargs):
+        super(TictacScreenManager, self).__init__(**kwargs)        
+        self.take_step = Clock.schedule_interval(self.update, 0.8)
+        
     def update(self, dt):
         if self.has_screen('game_board'):
-            self.get_screen('game_board').updateBoard()
+            if not game_has_finished:
+                self.get_screen('game_board').updateBoard()
+            else:
+                self.take_step.cancel()
+                self.get_screen('game_board').endGamePopup()
+
 
 class SelectScreen(Screen):
     
@@ -89,7 +94,7 @@ class SelectScreen(Screen):
         try:
             game_size = int(user_text)
             
-            if game_size > 2 and game_size < 10:
+            if game_size > 2 and game_size < 10:                
                 self.makeGameAppendIt(game_size,
                                       [self.whichChoice(p1_choices),
                                        self.whichChoice(p2_choices)])
@@ -107,19 +112,37 @@ class SelectScreen(Screen):
         print self.whichChoice(p1_choices), self.whichChoice(p2_choices)
 
     def makeGameAppendIt(self, g_size, policies):
+        N = str(g_size)
         
         # Setup game
-        Q_options = {'Q-learning': luckyQ, 'miniQmax' : pipeQ }
-        QM1= Q_options.get(policies[0], QMap())
-        QM2= Q_options.get(policies[1], QMap())
+        Q_loader = { 'Qlearning' : self.loadQ('newlucky'),
+                     'miniQmax'  : self.loadQ('pipeQ'),
+                     'train-miniQmax': self.loadQ('train-miniQmax_'+N+'X'+N)}
 
-        game = setupGame(QMap(), g_size, policies, p1QM=QM1, p2QM=QM2)
+        # Load trained Q if it exists
+        QM1 = Q_loader.get(policies[0], None)  
+        QM2 = Q_loader.get(policies[1], None)  
+
+        if 'train-miniQmax' in policies:
+            global_QM = Q_loader['train-miniQmax']
+            game = setupGame(global_QM, g_size, policies, p1QM=QM1,p2QM=QM2, learning=True)
+
+        else:
+            game = setupGame(QMap(), g_size, policies, p1QM=QM1,p2QM=QM2)
 
         # Create board widget
         if not self.manager.has_screen('game_board'):
             gb = GameBoard(game, game_size=g_size)
             gb.name = 'game_board'
             self.manager.add_widget(gb)
+
+    def loadQ(self, name): # Convenience function
+        import os.path
+        Q = QMap()
+        if os.path.isfile("./Qs/"+name+".pickle"):
+            with open("./Qs/"+name+".pickle", 'rb') as f:
+                Q = pickle.load(f)
+        return Q
         
     def startGame(self):
         if self.ready2go:
@@ -143,14 +166,40 @@ class GameBoard(Screen):
         self.add_widget(self.grid)
         
     def updateBoard(self):
+        global game_has_finished
+        
         if not self.G.game_finished:
             self.G.takeStep()
             for position, mark in self.G.game_sequence:
                 self.tiles[position].color = colors['blue'] + [1]
                 self.tiles[position].text = mark
                 self.tiles[position].font_size = self.tiles[0].width * 0.8
+        else:
+           game_has_finished = True           
+           # p1, p2 = self.G.players
+           # if True not in [p1.is_winner, p2.is_winner]:
+           #     self.endGamePopup("Its a draw!")
+           # else:
+           #     winner = [p for p in [p1,p2] if p.is_winner][0]
+           #     self.endGamePopup(winner.mark + " WINS!")
+           
+    def endGamePopup(self,end_text="finished"):
+        content=Button(text=end_text, font_size='30sp')
+        popup =Popup(title='Game Finished',
+                     title_size = '50sp',
+                     content=content,
+                     auto_dismiss=False,
+                     size_hint=(0.8, 0.4), size=(400,400))
+        content.bind(on_press=popup.dismiss)
+        content.bind(on_release=self.backToSelect)
+        popup.open()
+        
+    def backToSelect(self, arg):
+        print "AARRGGG", arg
+        self.manager.current='select_screen'
+        
 
-
+    
 class BoardTile(ButtonBehavior, Label):
     pass
         
@@ -183,10 +232,17 @@ class ListButton(ButtonBehavior, Label):
         print text_color
 
 class TicTacApp(App):
-
+    global game_has_finished
+    
     def build(self):
         game = TictacScreenManager()#SelectScreen()#GameBoard(5)
-        Clock.schedule_interval(game.update, 0.8)
+        # if game_has_finished:            
+        #     Clock.unschedule(proceed)
+        #     print "proceed.cancel called"
+        # else:
+        #     game.endGame()
+        #     print "endGame called"
+        
         return game
 
 if __name__ == '__main__':
