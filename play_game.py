@@ -42,7 +42,6 @@ noQs_message = "Currently only 3x3 game Q's have been trained for miniQmax\n"   
 NA_gamesize_message = "Game size must be an integer between 2 and 10 exclusive"
 
 
-
 # Default game in absence of player choice
 default_game = setupGame(QMap(), 3, ['ideal', 'ideal'])
 
@@ -58,19 +57,31 @@ class TictacScreenManager(ScreenManager):
         super(TictacScreenManager, self).__init__(**kwargs)        
         
     def update(self, dt):
+        game_board = self.get_screen('game_board')
+        current_player = game_board.G.current_player
+        # is_choosing = current_player.strategies.human_choosing    
+            
         if not game_has_finished:
-            self.get_screen('game_board').updateBoard()
-        else:
-            self.take_step.cancel()
-            self.get_screen('game_board').endGamePopup()
 
-    def startGame(self):
-        self.take_step = Clock.schedule_interval(self.update, 0.8)
+            if current_player.policy == 'human':
+                self.stopClock()
+            else:
+                game_board.updateBoard()
+                
+        else:
+            self.stopClock()
+            game_board.endGamePopup()
         
+            
     def resetGame(self, arg):
-        global game_has_finished        
-        game_has_finished = False        
+        global game_has_finished
+        game_has_finished = False
         self.switch_to(SelectScreen())
+        
+    def startClock(self):
+        self.take_step = Clock.schedule_interval(self.update, 0.8)
+    def stopClock(self):
+        self.take_step.cancel()        
 
 class SelectScreen(Screen):    
     
@@ -132,8 +143,10 @@ class SelectScreen(Screen):
 
         # Create board widget
         gb = GameBoard(game, game_size=self.game_size,name='game_board')
+        
         self.manager.switch_to(gb)
-        self.manager.startGame()
+        if policies[0] is not  'human': # Clock should not run during human's turn
+            self.manager.startClock()
 
     def loadQ(self, name): # Convenience function
         import os.path
@@ -142,8 +155,23 @@ class SelectScreen(Screen):
             with open("./Qs/"+name+".pickle", 'rb') as f:
                 Q = pickle.load(f)
         return Q
-
     
+class GreenButton(Button):
+    pass
+    
+class BoardTile(ButtonBehavior, Label):
+    def __init__(self,game_board, **kwargs):
+        super(BoardTile, self).__init__(**kwargs)
+        self.game_board = game_board
+        
+    def on_press(self):
+        self.game_board.G.current_player.strategies.human_move_index = int(self.text)
+        self.game_board.updateBoard()
+        
+    def on_release(self):
+        self.game_board.manager.startClock()
+        
+        
 class GameBoard(Screen):
 
     def __init__(self, game=default_game, game_size=3, **kwargs):
@@ -151,7 +179,7 @@ class GameBoard(Screen):
         self.game_size = game_size
         self.G = game
         self.tiles =                                        \
-        [BoardTile(text=str(i)) for i in range(game_size**2)]
+        [BoardTile(self, text=str(i)) for i in range(game_size**2)]
 
         # Generate Grid
         self.grid = GridLayout(cols=game_size)
@@ -171,7 +199,7 @@ class GameBoard(Screen):
                 self.tiles[position].text = mark
                 self.tiles[position].font_size = self.tiles[0].width * 0.8
         else:
-           game_has_finished = True           
+           game_has_finished = True
 
            
     def endGamePopup(self,end_text="finished"):
@@ -221,12 +249,6 @@ class ListButton(ButtonBehavior, Label):
                 
         self.color = text_color + [1]
         print text_color
-        
-class BoardTile(ButtonBehavior, Label):
-    pass
-
-class GreenButton(Button):
-    pass
 
 class TicTacApp(App):
     

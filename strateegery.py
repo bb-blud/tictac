@@ -20,6 +20,8 @@ class Strateegery(object):
     
     def __init__(self, game_state):
         self.game_state = game_state
+        self.human_move_index = 0  # Default upper left corner
+
         
     def linesOfRankN(self, N, sequence, player):
         """
@@ -50,16 +52,17 @@ class Strateegery(object):
     ###########################################################
     def humanMove(self, player):
         gs = self.game_state
-        choosing = True
         
-        gs.printGrid(gs.makeGrid(gs.game_sequence))
-
-        while choosing:
-            index = input("type index of your next move: ")
-            if index in range(gs.size**2) and gs.validMove(index, gs.game_sequence):
-                return index, player.mark
-            else:
-                print "Thats an invalid move"
+        return self.human_move_index , player.mark
+        ### Interactive in terminal
+        # choosing = True
+        # gs.printGrid(gs.makeGrid(gs.game_sequence))
+        # while choosing:
+        #     index = input("type index of your next move: ")
+        #     if index in range(gs.size**2) and gs.validMove(index, gs.game_sequence):
+        #         return index, player.mark
+        #     else:
+        #         print "Thats an invalid move"
                      
     ###########################################################
     # Random strategy
