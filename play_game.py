@@ -1,3 +1,6 @@
+import kivy
+kivy.require('1.9.1')
+
 from kivy.app import App
 from kivy.clock import Clock
 
@@ -14,15 +17,15 @@ from kivy.uix.label import Label
 from utilities import *
 
 colors = {
-    'black'   : [  0,   0,   0],
-    'white'   : [255, 255, 255],
-    'red'     : [255,   0,   0],
-    'green'   : [  0, 255,   0],
-    'blue'    : [  0,   0, 255],
-    'cyan'    : [  0, 200, 200],
-    'magenta' : [200,   0, 200],
-    'yellow'  : [255, 255,   0],
-    'orange'  : [255, 128,   0]
+    'black'   : [0, 0, 0],
+    'white'   : [1, 1, 1],
+    'red'     : [1, 0, 0],
+    'green'   : [0, 1, 0],
+    'blue'    : [0, 0, 1],
+    'cyan'    : [0, 200./255, 200],
+    'magenta' : [200./255, 0, 200./255],
+    'yellow'  : [1, 1,   0],
+    'orange'  : [1, 128./255, 0]
 }
 
 strategies = ['random',
@@ -83,7 +86,7 @@ class TictacScreenManager(ScreenManager):
     def stopClock(self):
         self.take_step.cancel()        
 
-class SelectScreen(Screen):    
+class SelectScreen(Screen):
     
     def whichChoice(self, choices):
         choice = [button for button in choices if button.pressed]
@@ -95,7 +98,7 @@ class SelectScreen(Screen):
     def sanitizeTextInput(self):
         global greeted
         user_text = self.ids['user_text_input'].text
-        if user_text not in ['', 3] :
+        if user_text != '':
             try:
                 N = int(user_text)
                 if N > 2 and N < 10:
@@ -225,7 +228,7 @@ class GameBoard(Screen):
                          auto_dismiss=False,
                          size_hint=(0.8, 0.4), size=(400,400))
             content.bind(on_press=popup.dismiss)
-            popup.open()  
+            popup.open()
         
         p1, p2 = self.G.players
         if True not in [p1.is_winner, p2.is_winner]:
@@ -233,7 +236,6 @@ class GameBoard(Screen):
         else:
             winner = [p for p in [p1,p2] if p.is_winner][0]
             popIt(winner.mark + " WINS!")
-
 
 class StrategyList(BoxLayout):
     
@@ -261,7 +263,7 @@ class ListButton(ButtonBehavior, Label):
                 b.color = colors['white'] + [1]
                 
         self.color = text_color + [1]
-        print text_color
+        print text_color, self.parent_list, self.pressed
 
 class TicTacApp(App):
     
