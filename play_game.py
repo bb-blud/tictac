@@ -261,7 +261,7 @@ class ListButton(ButtonBehavior, Label):
             if b != self:
                 b.pressed = False
                 b.color = colors['white'] + [1]
-                
+
         self.color = text_color + [1]
         print text_color, self.parent_list, self.pressed
 
