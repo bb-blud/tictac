@@ -13,6 +13,8 @@ tictac now sports a Kivy based gui were you can select a game size and strategie
 
 Dependencies 2) above were only really used for game analysis utilities but it will still complain if you don't have them. I've only tested Kivy on Ubuntu 16.04, install simply by running;
 
+`sudo add-apt-repository ppa:kivy-team/kivy`
+
 `sudo apt-get install python-kivy`
 
 To run tictac type the commands;
